@@ -1,0 +1,27 @@
+{
+  "name": "chemcalc-extended",
+  "version": "1.0.0",
+  "description": "chemcalc-extended project - Extend chemcalc-js to calculate experimental spectra similarity ",
+  "keywords": [
+    "chemcalc-extended",
+    "project"
+  ],
+  "main": [
+    "dist/chemcalc-extended.js",
+    "dist/chemcalc-extended.min.js"
+  ],
+  "authors": [
+    "Luc Patiny"
+  ],
+  "homepage": "https://github.com/cheminfo-js/chemcalc-extended",
+  "license": "MIT",
+  "moduleType": [
+    "amd",
+    "globals",
+    "node"
+  ],
+  "ignore": [
+    "/*",
+    "!dist/*"
+  ]
+}
