@@ -9,6 +9,22 @@ chemcalc-extended project - Extend chemcalc-js to allow experimental spectra sim
 
 ## Configuration
 
+### mfFromMonoisotopicMass
+
+extend mfFromMonoisotopicMass in order to include in the options:
+* experimental : an array of [[x1,y1],[x2,y2],...] or [[x1,x2,x3,...][y1,y2,y3,...]]
+* widthTop : top width of the trapezoid
+* widthBottom : bottom width of the trapezoid
+* from : mass "from" which calculate the similarity
+* to : mass "to" which calculate the similarity
+* decimalsPPM : number of decimals for PPM
+* decimalsMass : number odecimals for the mass
+
+### getEutrophicationPotential
+
+getEutrophicationPotential(mf)
+
+Returns an object containing the eutrophication potential of the given molecular formula.
 
 ## Development
 

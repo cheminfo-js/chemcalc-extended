@@ -34,5 +34,19 @@ describe('chemcalc-extended test', function () {
         result.results[0].ppm.should.equal( 5.7851);
         result.results[0].em.should.equal(217.10626);
     });
-
 });
+
+
+var resultEP=CE.getEutrophicationPotential("C5 H10 O2 P N3");
+
+describe('Eutrophication potential', function () {
+    it('Check results', function () {
+        resultEP.v.should.equal(1.2182971014492754);
+        resultEP.thOD.should.equal(4.25);
+        resultEP.ep.should.equal(0.6606776206950749);
+        resultEP.mw.should.equal(175.125768);
+        resultEP.mf.value.should.equal("C5 H10 O2 P N3");
+        resultEP.log.should.equal("Successful calculation");
+    });
+});
+

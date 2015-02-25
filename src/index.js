@@ -4,9 +4,8 @@
 var CC = require("chemcalc");
 var Similarity = require("peaks-similarity");
 
-module.exports = function() {};
 
-var CE=module.exports;
+var CE=exports;
 
 CE.analyseMF=CC.analyseMF;
 CE.getInfo=CC.getInfo;
@@ -56,3 +55,47 @@ CE.mfFromMonoisotopicMass = function(mass, options) {
     return mfResults;
 }
 
+CE.getEutrophicationPotential=function(mf) {
+    var chemcalc=CC.analyseMF(mf);
+    var atoms=chemcalc.parts[0].ea;
+    var mw=chemcalc.mw;
+    var nC=0, nO=0, nN=0, nP=0, nH=0;
+    for (var i=0; i<atoms.length; i++) {
+        var atom=atoms[i];
+        switch(atom.element) {
+            case "C":
+                nC=atom.number;
+                break;
+            case "N":
+                nN=atom.number;
+                break;
+            case "O":
+                nO=atom.number;
+                break;
+            case "H":
+                nH=atom.number;
+                break;
+            case "P":
+                nP=atom.number;
+                break;
+            default:
+                return {log:"EP can not be calculated because the MF contains the element: "+atom.element}
+        }
+    }
+
+    var vRef=1;
+    var mwRef=94.97;
+
+    var thOD = nC + (nH-3*nN)/4 - nO/2;
+    var v = nP + nN/16 + thOD/138;
+    var ep = (v / mw) / (vRef / mwRef)
+
+    return {
+        v: v,
+        thOD: thOD,
+        ep: ep,
+        mf: {type:"mf", value:mf},
+        mw: chemcalc.mw,
+        log:"Successful calculation"
+    }
+}
