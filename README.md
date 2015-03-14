@@ -20,6 +20,21 @@ extend mfFromMonoisotopicMass in order to include in the options:
 * decimalsPPM : number of decimals for PPM
 * decimalsMass : number odecimals for the mass
 
+### matchMFs
+
+We will try to find the molecular formula that match 
+
+matchMFs(experimental, mfs, options)
+* experimental : an array of [[x1,y1],[x2,y2],...] or [[x1,x2,x3,...][y1,y2,y3,...]]
+* mfs: array of array (or simple array) of all the possibilities to test / combine
+* options
+  * widthTop : top width of the trapezoid
+  * widthBottom : bottom width of the trapezoid
+  * from : mass "from" which calculate the similarity
+  * to : mass "to" which calculate the similarity
+  * decimalsPPM : number of decimals for PPM
+  * decimalsMass : number odecimals for the mass
+
 ### getEutrophicationPotential
 
 getEutrophicationPotential(mf)
