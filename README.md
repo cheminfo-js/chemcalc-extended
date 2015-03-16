@@ -60,10 +60,10 @@ Returns an object containing the eutrophication potential of the given molecular
   [MIT](./LICENSE)
 
 [npm-image]: https://img.shields.io/npm/v/cheminfo-chemcalc-extended.svg?style=flat-square
-[npm-url]: https://npmjs.org/package/cheminfo-chemcalc-extended
+[npm-url]: https://www.npmjs.com/package/cheminfo-chemcalc-extended
 [travis-image]: https://img.shields.io/travis/cheminfo-js/chemcalc-extended/master.svg?style=flat-square
 [travis-url]: https://travis-ci.org/cheminfo-js/chemcalc-extended
 [david-image]: https://img.shields.io/david/cheminfo-js/chemcalc-extended.svg?style=flat-square
 [david-url]: https://david-dm.org/cheminfo-js/chemcalc-extended
 [download-image]: https://img.shields.io/npm/dm/cheminfo-chemcalc-extended.svg?style=flat-square
-[download-url]: https://npmjs.org/package/cheminfo-chemcalc-extended
+[download-url]: https://www.npmjs.com/package/cheminfo-chemcalc-extended
