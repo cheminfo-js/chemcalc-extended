@@ -1,6 +1,6 @@
 /**
  * chemcalc-extended - chemcalc-extended project - extends chemcalc with new methods
- * @version v1.1.1
+ * @version v1.2.0
  * @link https://github.com/cheminfo-js/chemcalc-extended
  * @license MIT
  */
@@ -61,7 +61,7 @@ CE.mfFromMonoisotopicMass = function(mass, options) {
 CE.matchMFs = function(mfsArray, experimental, options) {
     var factorPPM, factorMass;
     options=options||{};
-
+    options.addExperimentalExtract=true;
     var similarity=new Similarity({widthTop: options.widthTop, widthBottom: options.widthBottom});
     similarity.setPeaks1(experimental);
 
@@ -176,8 +176,8 @@ CE.combineMFs=function (keys) {
 
 function processMF(result, similarity, mf, options) {
     options=options || {};
-
-    var ccResult=CC.analyseMF(mf, {isotopomers:"array"});
+    options.isotopomers="array";
+    var ccResult=CC.analyseMF(mf, options);
 
     if (options.from && options.to) {
         similarity.setFromTo(options.from, options.to);
@@ -197,11 +197,13 @@ function processMF(result, similarity, mf, options) {
 
 
     if (! result.em) result.em=ccResult.em;
+    if (! result.info) result.info=mf;
+    if (! result.mf) result.mf=ccResult.mf;
     result.extract=similarityResult.extract2;
     result.diff=similarityResult.diff;
     result.similarity=Math.floor(similarityResult.similarity*1e4)/1e2;
     result.color="hsla("+Math.round(similarityResult.similarity*120)+",100%,60%,0.6)";
-
+    if (options.addExperimentalExtract) result.extractExperimental=similarityResult.extract1;
 }
 
 
