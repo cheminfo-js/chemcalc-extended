@@ -1,6 +1,6 @@
 /**
  * chemcalc-extended - chemcalc-extended project - extends chemcalc with new methods
- * @version v1.2.0
+ * @version v1.2.1
  * @link https://github.com/cheminfo-js/chemcalc-extended
  * @license MIT
  */
@@ -49,9 +49,9 @@ CE.mfFromMonoisotopicMass = function(mass, options) {
     // we could improve a little bit the result ...
     for (var i=0; i<results.length; i++) {
         var result=results[i];
+        processMF(result, similarity, result.mf.value, options);
         if (factorPPM) result.ppm=Math.round(result.ppm*factorPPM)/factorPPM;
         if (factorMass) result.em=Math.round(result.em*factorMass)/factorMass;
-        processMF(result, similarity, result.mf.value, options);
      }
     mfResults.extractExperimental=similarity.getExtract1();
     return mfResults;
@@ -67,11 +67,14 @@ CE.matchMFs = function(mfsArray, experimental, options) {
 
     var mfs=CE.combineMFs(mfsArray);
 
+    if (options.decimalsMass) var factorMass=Math.pow(10,options.decimalsMass);
+
     var results=[];
     for (var i=0; i<mfs.length; i++) {
         var result={};
         results.push(result);
         processMF(result, similarity, mfs[i], options);
+        if (factorMass) result.em=Math.round(result.em*factorMass)/factorMass;
     }
 
     return {options: options, results:results};
@@ -179,8 +182,10 @@ function processMF(result, similarity, mf, options) {
     options.isotopomers="array";
     var ccResult=CC.analyseMF(mf, options);
 
+    var from, to;
     if (options.from && options.to) {
-        similarity.setFromTo(options.from, options.to);
+        from=options.from
+        to=options.to;
     } else {
         var charge=Math.abs(ccResult.parts[0].charge || 1);
         options.zone = options.zone || {};
@@ -188,9 +193,11 @@ function processMF(result, similarity, mf, options) {
         if (!options.zone.high) options.zone.high = 4.5;
 
         var target=ccResult.parts[0].msem || ccResult.parts[0].em;
-        similarity.setFromTo(target-options.zone.low/charge, target+options.zone.high/charge);
+        from=target-options.zone.low/charge;
+        to=target+options.zone.high/charge;
     }
 
+    similarity.setFromTo(from, to);
     similarity.setPeaks2(ccResult.spectrum);
 
     var similarityResult=similarity.getSimilarity();
@@ -199,6 +206,7 @@ function processMF(result, similarity, mf, options) {
     if (! result.em) result.em=ccResult.em;
     if (! result.info) result.info=mf;
     if (! result.mf) result.mf=ccResult.mf;
+    result.fromTo={from: from, to:to};
     result.extract=similarityResult.extract2;
     result.diff=similarityResult.diff;
     result.similarity=Math.floor(similarityResult.similarity*1e4)/1e2;
