@@ -24,7 +24,7 @@ extend mfFromMonoisotopicMass in order to include in the options:
 
 We will try to find the molecular formula that match 
 
-matchMFs(experimental, mfs, options)
+matchMFs(mfs, experimental, options)
 * experimental : an array of [[x1,y1],[x2,y2],...] or [[x1,x2,x3,...][y1,y2,y3,...]]
 * mfs: array of array (or simple array) of all the possibilities to test / combine
 * options
@@ -34,6 +34,10 @@ matchMFs(experimental, mfs, options)
   * to : mass "to" which calculate the similarity
   * decimalsPPM : number of decimals for PPM
   * decimalsMass : number odecimals for the mass
+
+### combineMFs(array)
+
+We may have array of array of string and we combine to get all the possibile MFs
 
 ### getEutrophicationPotential
 

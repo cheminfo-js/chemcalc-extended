@@ -24,13 +24,13 @@ var options = {
 debugger;
 var result=CE.mfFromMonoisotopicMass(217.105, options);
 
-console.log(result);
+//console.log(result);
 
 
 
 
 var resultEP=CE.getEutrophicationPotential("C5 H10 O2 P N3");
 
-console.log(resultEP);
+//console.log(resultEP);
 
 
