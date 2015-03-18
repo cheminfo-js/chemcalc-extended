@@ -183,7 +183,7 @@ function processMF(result, similarity, mf, options) {
     } else {
         var charge=Math.abs(ccResult.parts[0].charge || 1);
         options.zone = options.zone || {};
-        if (!options.zone.low) options.zone.low = 0.5;
+        if (!options.zone.low) options.zone.low = -0.5;
         if (!options.zone.high) options.zone.high = 4.5;
 
         var target=ccResult.parts[0].msem || ccResult.parts[0].em;
