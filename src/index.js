@@ -187,7 +187,7 @@ function processMF(result, similarity, mf, options) {
         if (!options.zone.high) options.zone.high = 4.5;
 
         var target=ccResult.parts[0].msem || ccResult.parts[0].em;
-        from=target-options.zone.low/charge;
+        from=target+options.zone.low/charge;
         to=target+options.zone.high/charge;
     }
 
