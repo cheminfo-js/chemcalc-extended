@@ -34,6 +34,7 @@ matchMFs(mfs, experimental, options)
   * to : mass "to" which calculate the similarity
   * decimalsPPM : number of decimals for PPM
   * decimalsMass : number odecimals for the mass
+  * zone : zone on which to calculate similarity. It is based on monoisotopic mass. It is an object that contains "low" and "high". Those values will be divided by the charge of the current molecular formula. Default: zone: {low: -0.5, high: 6.5}
 
 ### combineMFs(array)
 
