@@ -64,7 +64,7 @@ CE.matchMFs = function(mfsArray, experimental, options) {
 
     var results=[];
     for (var i=0; i<mfs.length; i++) {
-        console.log("Analysing: "+i+"/"+mfs.length+" ("+mfs[i]+")");
+        console.log("Analysing: "+(i+1)+"/"+mfs.length+" ("+mfs[i]+")");
         var result={};
         results.push(result);
         processMF(result, similarity, mfs[i], options);
