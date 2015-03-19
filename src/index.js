@@ -200,7 +200,7 @@ function processMF(result, similarity, mf, options) {
     if (! result.em) result.em=ccResult.em;
     if (! result.info) result.info=mf;
     if (! result.mf) result.mf=ccResult.mf;
-    if (! result.charge) result.charge=ccResult.parts[0].charge;
+    if (! result.charge) result.charge=ccResult.parts[0].charge || 0;
     result.fromTo={from: from, to:to};
     result.extract=similarityResult.extract2;
     result.diff=similarityResult.diff;
