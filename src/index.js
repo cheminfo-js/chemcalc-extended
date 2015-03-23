@@ -131,11 +131,13 @@ CE.combineMFs=function (keys) {
         var comments=[];
         for (var i=0; i<keys.length; i++) {
             var key=keys[i][currents[i]];
-            if (key.indexOf("$")>-1) {
-                comments.push(key.replace(/^[^$]*\$/,""));
-                key=key.replace(/\$.*/,"");
+            if (key) {
+                if (key.indexOf("$")>-1) {
+                    comments.push(key.replace(/^[^$]*\$/,""));
+                    key=key.replace(/\$.*/,"");
+                }
+                result+=key;
             }
-            result+=key;
         }
         if (comments.length>0) result+="$"+comments.join(" ");
         results.push(result);
