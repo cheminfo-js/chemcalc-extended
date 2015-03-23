@@ -64,7 +64,7 @@ CE.matchMFs = function(mfsArray, experimental, options) {
 
     var results=[];
     for (var i=0; i<mfs.length; i++) {
-        console.log("Analysing: "+i+"/"+mfs.length+" ("+mfs[i]+")");
+        console.log("Analysing: "+(i+1)+"/"+mfs.length+" ("+mfs[i]+")");
         var result={};
         results.push(result);
         processMF(result, similarity, mfs[i], options);
@@ -185,11 +185,11 @@ function processMF(result, similarity, mf, options) {
     } else {
         var charge=Math.abs(ccResult.parts[0].charge || 1);
         options.zone = options.zone || {};
-        if (!options.zone.low) options.zone.low = 0.5;
+        if (!options.zone.low) options.zone.low = -0.5;
         if (!options.zone.high) options.zone.high = 4.5;
 
         var target=ccResult.parts[0].msem || ccResult.parts[0].em;
-        from=target-options.zone.low/charge;
+        from=target+options.zone.low/charge;
         to=target+options.zone.high/charge;
     }
 
@@ -202,7 +202,7 @@ function processMF(result, similarity, mf, options) {
     if (! result.em) result.em=ccResult.em;
     if (! result.info) result.info=mf;
     if (! result.mf) result.mf=ccResult.mf;
-    if (! result.charge) result.charge=ccResult.parts[0].charge;
+    if (! result.charge) result.charge=ccResult.parts[0].charge || 0;
     result.fromTo={from: from, to:to};
     result.extract=similarityResult.extract2;
     result.diff=similarityResult.diff;

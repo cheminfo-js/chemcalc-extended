@@ -1,6 +1,6 @@
 /**
  * chemcalc-extended - chemcalc-extended project - extends chemcalc with new methods
- * @version v1.2.1
+ * @version v1.2.2
  * @link https://github.com/cheminfo-js/chemcalc-extended
  * @license MIT
  */
@@ -71,6 +71,7 @@ CE.matchMFs = function(mfsArray, experimental, options) {
 
     var results=[];
     for (var i=0; i<mfs.length; i++) {
+        console.log("Analysing: "+i+"/"+mfs.length+" ("+mfs[i]+")");
         var result={};
         results.push(result);
         processMF(result, similarity, mfs[i], options);
@@ -206,6 +207,7 @@ function processMF(result, similarity, mf, options) {
     if (! result.em) result.em=ccResult.em;
     if (! result.info) result.info=mf;
     if (! result.mf) result.mf=ccResult.mf;
+    if (! result.charge) result.charge=ccResult.parts[0].charge;
     result.fromTo={from: from, to:to};
     result.extract=similarityResult.extract2;
     result.diff=similarityResult.diff;
