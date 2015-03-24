@@ -64,10 +64,11 @@ CE.matchMFs = function(mfsArray, experimental, options) {
 
     var results=[];
     for (var i=0; i<mfs.length; i++) {
-        console.log("Analysing: "+(i+1)+"/"+mfs.length+" ("+mfs[i]+")");
+        console.log("Analysing: "+(i+1)+"/"+mfs.length+" ("+mfs[i].mf+")");
         var result={};
         results.push(result);
-        processMF(result, similarity, mfs[i], options);
+        processMF(result, similarity, mfs[i].mf, options);
+        result.parts=mfs[i];
         if (factorMass) result.em=Math.round(result.em*factorMass)/factorMass;
     }
 
@@ -127,16 +128,17 @@ CE.combineMFs=function (keys) {
         // this script is designed to combine molecular formula
         // that may contain comments after a "$" sign
         // therefore we should put all the comments at the ned
-        var result="";
+        var result={"mf":""};
         var comments=[];
         for (var i=0; i<keys.length; i++) {
             var key=keys[i][currents[i]];
             if (key) {
+                result["part"+(i+1)]=key;
                 if (key.indexOf("$")>-1) {
                     comments.push(key.replace(/^[^$]*\$/,""));
                     key=key.replace(/\$.*/,"");
                 }
-                result+=key;
+                result.mf+=key;
             }
         }
         if (comments.length>0) result+="$"+comments.join(" ");
@@ -203,6 +205,7 @@ function processMF(result, similarity, mf, options) {
     if (! result.info) result.info=mf;
     if (! result.mf) result.mf=ccResult.mf;
     if (! result.charge) result.charge=ccResult.parts[0].charge || 0;
+    if (! result.msem) result.msem=result.charge=ccResult.parts[0].msem || 0;
     result.fromTo={from: from, to:to};
     result.extract=similarityResult.extract2;
     result.diff=similarityResult.diff;
