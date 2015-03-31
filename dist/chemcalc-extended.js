@@ -1,6 +1,6 @@
 /**
  * chemcalc-extended - chemcalc-extended project - extends chemcalc with new methods
- * @version v1.2.2
+ * @version v1.2.3
  * @link https://github.com/cheminfo-js/chemcalc-extended
  * @license MIT
  */
