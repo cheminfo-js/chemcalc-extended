@@ -70,6 +70,7 @@ CE.matchMFs = function(mfsArray, experimental, options) {
         processMF(result, similarity, mfs[i].mf, options);
         result.parts=mfs[i];
         if (factorMass) result.em=Math.round(result.em*factorMass)/factorMass;
+        if (factorMass && result.msem) result.msem=Math.round(result.msem*factorMass)/factorMass;
     }
 
     return {options: options, results:results};
