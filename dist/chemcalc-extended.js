@@ -1,6 +1,6 @@
 /**
  * chemcalc-extended - chemcalc-extended project - extends chemcalc with new methods
- * @version v1.2.3
+ * @version v1.2.4
  * @link https://github.com/cheminfo-js/chemcalc-extended
  * @license MIT
  */
@@ -212,7 +212,7 @@ function processMF(result, similarity, mf, options) {
     if (! result.info) result.info=mf;
     if (! result.mf) result.mf=ccResult.mf;
     if (! result.charge) result.charge=ccResult.parts[0].charge || 0;
-    if (! result.msem) result.msem=result.charge=ccResult.parts[0].msem || 0;
+    if (! result.msem) result.msem=ccResult.parts[0].msem || 0;
     result.fromTo={from: from, to:to};
     result.extract=similarityResult.extract2;
     result.diff=similarityResult.diff;
