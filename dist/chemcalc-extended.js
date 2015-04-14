@@ -1,6 +1,6 @@
 /**
  * chemcalc-extended - chemcalc-extended project - extends chemcalc with new methods
- * @version v1.2.4
+ * @version v1.3.0
  * @link https://github.com/cheminfo-js/chemcalc-extended
  * @license MIT
  */
@@ -19,7 +19,7 @@ CE.getInfo=CC.getInfo;
 
 
 /*
-We will extentend mfFromMonoisotopicMass in order to include in the options:
+We will extend mfFromMonoisotopicMass in order to include in the options:
 * experimental : an array of [[x1,y1],[x2,y2],...] or [[x1,x2,x3,...][y1,y2,y3,...]]
 * widthTop : top width of the trapezoid
 * widthBottom : bottom width of the trapezoid
@@ -43,8 +43,8 @@ CE.mfFromMonoisotopicMass = function(mass, options) {
 
     var results=mfResults.results;
 
-    if (options.decimalsPPM) var factorPPM=Math.pow(10,options.decimalsPPM);
-    if (options.decimalsMass) var factorMass=Math.pow(10,options.decimalsMass);
+    if (options.decimalsPPM) factorPPM=Math.pow(10,options.decimalsPPM);
+    if (options.decimalsMass) factorMass=Math.pow(10,options.decimalsMass);
 
     // we could improve a little bit the result ...
     for (var i=0; i<results.length; i++) {
@@ -59,7 +59,7 @@ CE.mfFromMonoisotopicMass = function(mass, options) {
 
 
 CE.matchMFs = function(mfsArray, experimental, options) {
-    var factorPPM, factorMass;
+    var factorMass;
     options=options||{};
     options.addExperimentalExtract=true;
     var similarity=new Similarity({widthTop: options.widthTop, widthBottom: options.widthBottom});
@@ -67,7 +67,7 @@ CE.matchMFs = function(mfsArray, experimental, options) {
 
     var mfs=CE.combineMFs(mfsArray);
 
-    if (options.decimalsMass) var factorMass=Math.pow(10,options.decimalsMass);
+    if (options.decimalsMass) factorMass=Math.pow(10,options.decimalsMass);
 
     var results=[];
     for (var i=0; i<mfs.length; i++) {
@@ -77,6 +77,7 @@ CE.matchMFs = function(mfsArray, experimental, options) {
         processMF(result, similarity, mfs[i].mf, options);
         result.parts=mfs[i];
         if (factorMass) result.em=Math.round(result.em*factorMass)/factorMass;
+        if (factorMass && result.msem) result.msem=Math.round(result.msem*factorMass)/factorMass;
     }
 
     return {options: options, results:results};
@@ -184,7 +185,7 @@ CE.combineMFs=function (keys) {
 
 function processMF(result, similarity, mf, options) {
     options=options || {};
-    options.isotopomers="array";
+    options.isotopomers="arrayXYXY";
     var ccResult=CC.analyseMF(mf, options);
 
     var from, to;
@@ -203,7 +204,7 @@ function processMF(result, similarity, mf, options) {
     }
 
     similarity.setFromTo(from, to);
-    similarity.setPeaks2(ccResult.spectrum);
+    similarity.setPeaks2(ccResult.arrayXYXY);
 
     var similarityResult=similarity.getSimilarity();
 
@@ -215,10 +216,14 @@ function processMF(result, similarity, mf, options) {
     if (! result.msem) result.msem=ccResult.parts[0].msem || 0;
     result.fromTo={from: from, to:to};
     result.extract=similarityResult.extract2;
+    result.extractInfo=similarityResult.extractInfo2;
     result.diff=similarityResult.diff;
     result.similarity=Math.floor(similarityResult.similarity*1e4)/1e2;
     result.color="hsla("+Math.round(similarityResult.similarity*120)+",100%,60%,0.6)";
-    if (options.addExperimentalExtract) result.extractExperimental=similarityResult.extract1;
+    if (options.addExperimentalExtract) {
+        result.extractExperimental=similarityResult.extract1;
+        result.extractInfoExperimental=similarityResult.extractInfo1;
+    }
 }
 
 
@@ -1086,7 +1091,7 @@ var fk,gk=0,hk;Lg(34,45,{116:1},nk,ok);var cf=zi(34);Lg(22,45,{116:1},tk,uk,vk);
 
 module.exports = function Comparator(options) {
     
-    var widthTop, widthBottom, from, to, array1Extract, array2Extract, widthSlope;
+    var widthTop, widthBottom, from, to, array1Extract, array2Extract, widthSlope, array1ExtractInfo, array2ExtractInfo;
 
 
     setOptions(options);
@@ -1110,11 +1115,15 @@ module.exports = function Comparator(options) {
 
     function setPeaks1(anArray) {
         array1=checkArray(anArray);
-        array1Extract=extractAndNormalize(array1, from, to);
+        var extract=extractAndNormalize(array1, from, to);
+        array1Extract=extract.data;
+        array1ExtractInfo=extract.info;
     }
     function setPeaks2(anArray) {
         array2=checkArray(anArray);
-        array2Extract=extractAndNormalize(array2, from, to);
+        var extract=extractAndNormalize(array2, from, to);
+        array2Extract=extract.data;
+        array2ExtractInfo=extract.info;
     }
 
     function getExtract1() {
@@ -1123,6 +1132,15 @@ module.exports = function Comparator(options) {
 
     function getExtract2() {
         return array2Extract;
+    }
+
+
+    function getExtractInfo1() {
+        return array1ExtractInfo;
+    }
+
+    function getExtractInfo2() {
+        return array2ExtractInfo;
     }
 
     function setTrapezoid(newWidthBottom, newWidthTop) {
@@ -1136,11 +1154,34 @@ module.exports = function Comparator(options) {
         if (newFrom===from && newTo===to) return
         from=newFrom;
         to=newTo;
-        array1Extract=extractAndNormalize(array1, from, to);
-        array2Extract=extractAndNormalize(array2, from, to);
+        var extract=extractAndNormalize(array1, from, to);
+        array1Extract=extract.data;
+        array1ExtractInfo=extract.info;
+        var extract=extractAndNormalize(array2, from, to);
+        array2Extract=extract.data;
+        array2ExtractInfo=extract.info;
     }
 
+
     function getOverlap(x1, y1, x2, y2) {
+        if (y1===0 || y2===0) return 0;
+
+        // TAKE CARE !!! We multiply the diff by 2 !!!
+        var diff=Math.abs(x1-x2)*2;
+
+        if (diff>widthBottom) return 0;
+        if (diff<=widthTop) {
+            return Math.min(y1,y2);
+        }
+
+        var maxValue=Math.max(y1,y2)*(widthBottom-diff)/(widthBottom-widthTop);
+        return Math.min(y1, y2, maxValue);
+
+        return NaN;
+    }
+
+    // This is the old trapezoid similarity
+    function getOverlapTrapezoid(x1, y1, x2, y2) {
         var factor=2/(widthTop+widthBottom); // correction for surface=1
         if (y1===0 || y2===0) return 0;
         if (x1===x2) { // they have the same position
@@ -1217,7 +1258,12 @@ module.exports = function Comparator(options) {
         while (pos1<newFirst.length) {
             var diff=newFirst[pos1][0]-array2Extract[pos2][0];
             if (Math.abs(diff)<widthBottom) { // there is some overlap
-                var overlap=getOverlap(newFirst[pos1][0], newFirst[pos1][1], newSecond[pos2][0], newSecond[pos2][1], widthTop, widthBottom);
+                if (options.trapezoid) {
+                    var overlap=getOverlapTrapezoid(newFirst[pos1][0], newFirst[pos1][1], newSecond[pos2][0], newSecond[pos2][1], widthTop, widthBottom);
+
+                } else {
+                    var overlap=getOverlap(newFirst[pos1][0], newFirst[pos1][1], newSecond[pos2][0], newSecond[pos2][1], widthTop, widthBottom);
+                }
                 newFirst[pos1][1]-=overlap;
                 newSecond[pos2][1]-=overlap;
                 if (pos2<(array2Extract.length-1)) {
@@ -1264,6 +1310,8 @@ module.exports = function Comparator(options) {
         result.diff=calculateDiff();
         result.extract1=getExtract1();
         result.extract2=getExtract2();
+        result.extractInfo1=getExtractInfo1();
+        result.extractInfo2=getExtractInfo2();
         result.similarity=calculateOverlapFromDiff(result.diff);
         return result;
     }
@@ -1272,6 +1320,8 @@ module.exports = function Comparator(options) {
     this.setPeaks2 = setPeaks2;
     this.getExtract1 = getExtract1;
     this.getExtract2 = getExtract2;
+    this.getExtractInfo1 = getExtractInfo1;
+    this.getExtractInfo2 = getExtractInfo2;
     this.setFromTo = setFromTo;
     this.setOptions = setOptions;
     this.setTrapezoid = setTrapezoid;
@@ -1310,19 +1360,30 @@ function getIntersection(segment1, segment2) {
 
 function normalize(array) {
     var sum=0;
+    var min=Number.MAX_VALUE;
+    var max=Number.MIN_VALUE;
     for (var i=0; i<array.length; i++) {
         sum+=array[i][1];
+        if (array[i][1]<min) min=array[i][1];
+        if (array[i][1]>max) max=array[i][1];
     }
     if (sum!=0) {
         for (var i=0; i<array.length; i++) {
             array[i][1]/=sum;
         }
     }
-
+    return {
+        sum: sum,
+        min: min,
+        max: max
+    };
 }
 
 function extractAndNormalize(array, from, to) {
-    if (! (Array.isArray(array))) return;
+    if (! (Array.isArray(array))) return {
+        info: undefined,
+        data: undefined
+    };
     var newArray=[];
     var j=0;
     for (var i=0; i<array.length; i++) {
@@ -1330,8 +1391,11 @@ function extractAndNormalize(array, from, to) {
             newArray[j++]=[array[i][0],array[i][1]];
         }
     }
-    normalize(newArray);
-    return newArray;
+    var info=normalize(newArray);
+    return {
+        info: info,
+        data: newArray
+    };
 }
 
 function calculateOverlapFromDiff(diffs) {
