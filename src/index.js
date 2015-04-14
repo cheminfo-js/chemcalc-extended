@@ -12,7 +12,7 @@ CE.getInfo=CC.getInfo;
 
 
 /*
-We will extentend mfFromMonoisotopicMass in order to include in the options:
+We will extend mfFromMonoisotopicMass in order to include in the options:
 * experimental : an array of [[x1,y1],[x2,y2],...] or [[x1,x2,x3,...][y1,y2,y3,...]]
 * widthTop : top width of the trapezoid
 * widthBottom : bottom width of the trapezoid
@@ -36,8 +36,8 @@ CE.mfFromMonoisotopicMass = function(mass, options) {
 
     var results=mfResults.results;
 
-    if (options.decimalsPPM) var factorPPM=Math.pow(10,options.decimalsPPM);
-    if (options.decimalsMass) var factorMass=Math.pow(10,options.decimalsMass);
+    if (options.decimalsPPM) factorPPM=Math.pow(10,options.decimalsPPM);
+    if (options.decimalsMass) factorMass=Math.pow(10,options.decimalsMass);
 
     // we could improve a little bit the result ...
     for (var i=0; i<results.length; i++) {
@@ -52,7 +52,7 @@ CE.mfFromMonoisotopicMass = function(mass, options) {
 
 
 CE.matchMFs = function(mfsArray, experimental, options) {
-    var factorPPM, factorMass;
+    var factorMass;
     options=options||{};
     options.addExperimentalExtract=true;
     var similarity=new Similarity({widthTop: options.widthTop, widthBottom: options.widthBottom});
@@ -60,7 +60,7 @@ CE.matchMFs = function(mfsArray, experimental, options) {
 
     var mfs=CE.combineMFs(mfsArray);
 
-    if (options.decimalsMass) var factorMass=Math.pow(10,options.decimalsMass);
+    if (options.decimalsMass) factorMass=Math.pow(10,options.decimalsMass);
 
     var results=[];
     for (var i=0; i<mfs.length; i++) {
@@ -178,7 +178,7 @@ CE.combineMFs=function (keys) {
 
 function processMF(result, similarity, mf, options) {
     options=options || {};
-    options.isotopomers="array";
+    options.isotopomers="arrayXYXY";
     var ccResult=CC.analyseMF(mf, options);
 
     var from, to;
@@ -197,7 +197,7 @@ function processMF(result, similarity, mf, options) {
     }
 
     similarity.setFromTo(from, to);
-    similarity.setPeaks2(ccResult.spectrum);
+    similarity.setPeaks2(ccResult.arrayXYXY);
 
     var similarityResult=similarity.getSimilarity();
 
@@ -209,9 +209,13 @@ function processMF(result, similarity, mf, options) {
     if (! result.msem) result.msem=ccResult.parts[0].msem || 0;
     result.fromTo={from: from, to:to};
     result.extract=similarityResult.extract2;
+    result.extractInfo=similarityResult.extractInfo2;
     result.diff=similarityResult.diff;
     result.similarity=Math.floor(similarityResult.similarity*1e4)/1e2;
     result.color="hsla("+Math.round(similarityResult.similarity*120)+",100%,60%,0.6)";
-    if (options.addExperimentalExtract) result.extractExperimental=similarityResult.extract1;
+    if (options.addExperimentalExtract) {
+        result.extractExperimental=similarityResult.extract1;
+        result.extractInfoExperimental=similarityResult.extractInfo1;
+    }
 }
 

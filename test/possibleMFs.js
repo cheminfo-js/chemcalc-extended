@@ -23,9 +23,27 @@ describe('chemcalc-extended matchMFs', function () {
 
 
     it('Check results element 0', function () {
+
+
+        console.log("==============");
+        console.log(result.results[0].extract);
+        console.log(result.results[0].extractInfo);
+
         result.results.length.should.equal(12);
         result.results[0].em.should.equal(12);
-        result.results[0].similarity.should.equal( 18.03);
+        result.results[0].similarity.should.equal(  9.49);
+        result.results[0].extractInfo.sum.should.be.approximately(1.011, 1e-3);
+        result.results[0].extractInfo.min.should.be.approximately(0.011, 1e-3);
+        result.results[0].extractInfo.max.should.be.approximately(1, 1e-3);
+
+
+
+        result.results[0].extractInfoExperimental.sum.should.be.approximately(101.0815, 1e-3);
+        result.results[0].extractInfoExperimental.min.should.be.approximately(0, 1e-3);
+        result.results[0].extractInfoExperimental.max.should.be.approximately(9.39437, 1e-3);
+
+
+
     });
 
     it('Check results element 11', function () {
