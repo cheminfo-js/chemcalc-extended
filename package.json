@@ -45,7 +45,7 @@
     "vinyl-source-stream": "^1.0.0"
   },
   "dependencies": {
-    "chemcalc": "^2.1.3",
+    "chemcalc": "^2.1.4",
     "peaks-similarity": "^1.2.1"
   }
 }
