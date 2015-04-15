@@ -23,12 +23,6 @@ describe('chemcalc-extended matchMFs', function () {
 
 
     it('Check results element 0', function () {
-
-
-        console.log("==============");
-        console.log(result.results[0].extract);
-        console.log(result.results[0].extractInfo);
-
         result.results.length.should.equal(12);
         result.results[0].em.should.equal(12);
         result.results[0].similarity.should.equal(  9.49);

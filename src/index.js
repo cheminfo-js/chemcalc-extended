@@ -142,7 +142,9 @@ CE.combineMFs=function (keys) {
                 result.mf+=key;
             }
         }
-        if (comments.length>0) result+="$"+comments.join(" ");
+
+        if (comments.length>0) result.mf+="$"+comments.join(" ");
+
         results.push(result);
     }
 

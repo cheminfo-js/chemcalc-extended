@@ -3,11 +3,11 @@
 var CE = require('..');
 
 
-var mfsArray=[["C","H"],[],[""],["Cl","Br"]];
+var mfsArray=[["C","H$YY"],[],[""],["Cl","Br$XX"]];
 
 var result=CE.combineMFs(mfsArray);
 
-console.log(result[0]);
+console.log(result);
 
 describe('combine MFstest', function () {
     it('Check result', function () {
