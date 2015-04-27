@@ -27,7 +27,7 @@ We will extend mfFromMonoisotopicMass in order to include in the options:
 CE.mfFromMonoisotopicMass = function(mass, options) {
     var factorPPM, factorMass;
     if (! options) throw "Options are mandatory";
-    if (! options.experimental) throw "You need to have an experimental list of peaks in options.experimental";
+    if (! options.experimental) throw "You need to have an experimental list of peaks in options.experimental. Otherwise simply use chemcalc-js";
 
     var mfResults = CC.mfFromMonoisotopicMass(mass, options);
     var similarity=new Similarity({widthTop: options.widthTop, widthBottom: options.widthBottom});
@@ -40,12 +40,16 @@ CE.mfFromMonoisotopicMass = function(mass, options) {
     if (options.decimalsMass) factorMass=Math.pow(10,options.decimalsMass);
 
     // we could improve a little bit the result ...
+
+    // TODO this is the limiting step. There should be an option to allow multithread !!!
+
+
     for (var i=0; i<results.length; i++) {
         var result=results[i];
         processMF(result, similarity, result.mf.value, options);
         if (factorPPM) result.ppm=Math.round(result.ppm*factorPPM)/factorPPM;
         if (factorMass) result.em=Math.round(result.em*factorMass)/factorMass;
-     }
+    }
     mfResults.extractExperimental=similarity.getExtract1();
     return mfResults;
 }
@@ -55,6 +59,9 @@ CE.matchMFs = function(mfsArray, experimental, options) {
     var factorMass;
     options=options||{};
     options.addExperimentalExtract=true;
+    options.maxResults=options.maxResults || 500;
+    options.minSimilarity=(isNaN(options.minSimilarity)) ? 50 : options.minSimilarity;
+
     var similarity=new Similarity({widthTop: options.widthTop, widthBottom: options.widthBottom});
     similarity.setPeaks1(experimental);
 
@@ -71,9 +78,58 @@ CE.matchMFs = function(mfsArray, experimental, options) {
         result.parts=mfs[i];
         if (factorMass) result.em=Math.round(result.em*factorMass)/factorMass;
         if (factorMass && result.msem) result.msem=Math.round(result.msem*factorMass)/factorMass;
+
+        if (results.length>options.maxResults*2) {
+            results=CE.bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
+        }
+
+    }
+    results=CE.bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
+    return {options: options, results:results};
+}
+
+/* we have 2 criteria to find the best results
+1. best match per zone based on the bestOf parameter
+2. maxResults : maximal number of results
+*/
+CE.bestResults = function(results, bestOf, maxResults, minSimilarity) {
+    var newResults=[];
+
+    // in order to find the bestOf we will sort by similarity and take all of them for which there is nothing in a range
+    // of the bestOf range
+
+    var results=results.sort(function(a,b) {
+        return b.similarity-a.similarity;
+    });
+
+    if (minSimilarity) {
+        for (var i=0; i<results.length; i++) {
+            if (results[i].similarity<minSimilarity) {
+                results=results.slice(0, i);
+                break;
+            }
+        }
     }
 
-    return {options: options, results:results};
+    if (bestOf) {
+        for (var i=0; i<results.length && newResults.length<maxResults; i++) {
+            for (var j=0; j<newResults.length; j++) {
+                if (Math.abs(newResults[j].em-results[i].em)<bestOf) {
+                    break;
+                }
+            }
+            if (j==newResults.length) {
+                newResults.push(results[i]);
+            }
+        }
+    } else {
+        newResults=results.slice(0,maxResults);
+    }
+
+
+    return newResults;
+
+
 }
 
 

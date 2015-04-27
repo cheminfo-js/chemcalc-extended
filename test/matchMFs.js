@@ -13,37 +13,86 @@ var options = {
     widthBottom: 2e-2,
     range: {low: 0.5, high: 5},
     decimalsPPM: 4,
-    decimalsMass: 5
+    decimalsMass: 5,
+    minSimilarity: 0
 };
 
 
 var result=CE.matchMFs(possibleMFs, experimental, options);
 
 describe('chemcalc-extended matchMFs', function () {
-
+    it('Check results element 8', function () {
+        result.results.length.should.equal(12);
+        result.results[8].em.should.equal(12);
+        result.results[8].similarity.should.equal(  9.49);
+        result.results[8].extractInfo.sum.should.be.approximately(1.011, 1e-3);
+        result.results[8].extractInfo.min.should.be.approximately(0.011, 1e-3);
+        result.results[8].extractInfo.max.should.be.approximately(1, 1e-3);
+        result.results[8].extractInfoExperimental.sum.should.be.approximately(101.0815, 1e-3);
+        result.results[8].extractInfoExperimental.min.should.be.approximately(0, 1e-3);
+        result.results[8].extractInfoExperimental.max.should.be.approximately(9.39437, 1e-3);
+    });
 
     it('Check results element 0', function () {
-        result.results.length.should.equal(12);
-        result.results[0].em.should.equal(12);
-        result.results[0].similarity.should.equal(  9.49);
-        result.results[0].extractInfo.sum.should.be.approximately(1.011, 1e-3);
-        result.results[0].extractInfo.min.should.be.approximately(0.011, 1e-3);
-        result.results[0].extractInfo.max.should.be.approximately(1, 1e-3);
-
-
-
-        result.results[0].extractInfoExperimental.sum.should.be.approximately(101.0815, 1e-3);
-        result.results[0].extractInfoExperimental.min.should.be.approximately(0, 1e-3);
-        result.results[0].extractInfoExperimental.max.should.be.approximately(9.39437, 1e-3);
-
-
-
+        result.results[0].em.should.equal(48.00114);
+        result.results[0].similarity.should.equal( 18.53);
     });
 
-    it('Check results element 11', function () {
-        result.results[11].em.should.equal(36.00114);
-        result.results[11].similarity.should.equal( 0);
-    });
+});
 
+
+var options = {
+    typedResult: true,
+    resolution: 0.0001,
+    widthTop: 1e-2,
+    widthBottom: 2e-2,
+    range: {low: 0.5, high: 5},
+    decimalsPPM: 4,
+    decimalsMass: 5,
+    maxResults:6,
+    bestOf: 10,
+    minSimilarity: 0
+};
+
+
+var result2=CE.matchMFs(possibleMFs, experimental, options);
+
+describe('chemcalc-extended matchMFs - maxResults and bestOf', function () {
+    it('Check results element 0', function () {
+        result2.results.length.should.equal(5);
+        result2.results[0].em.should.equal(48.00114);
+        result2.results[0].similarity.should.equal(18.53);
+        result2.results[4].em.should.equal(60.00114);
+        result2.results[4].similarity.should.equal(0);
+    });
+});
+
+
+var options = {
+    typedResult: true,
+    resolution: 0.0001,
+    widthTop: 1e-2,
+    widthBottom: 2e-2,
+    range: {low: 0.5, high: 5},
+    decimalsPPM: 4,
+    decimalsMass: 5,
+    minSimilarity: 10
+};
+
+// by default minSimilarity=50
+var result3=CE.matchMFs(possibleMFs, experimental, options);
+
+describe('chemcalc-extended matchMFs - minSimilarity=10', function () {
+    it('Check results element 0', function () {
+        for (var i=0; i<result.results.length; i++) {
+            console.log(result.results[i].similarity, result.results[i].em);
+        }
+
+        result3.results.length.should.equal(3);
+        result3.results[0].em.should.equal(48.00114);
+        result3.results[0].similarity.should.equal(18.53);
+        result3.results[2].em.should.equal(36.00114);
+        result3.results[2].similarity.should.equal(17.99);
+    });
 });
 

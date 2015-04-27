@@ -33,8 +33,11 @@ matchMFs(mfs, experimental, options)
   * from : mass "from" which calculate the similarity
   * to : mass "to" which calculate the similarity
   * decimalsPPM : number of decimals for PPM
-  * decimalsMass : number odecimals for the mass
+  * decimalsMass : number of decimals for the mass
   * zone : zone on which to calculate similarity. It is based on monoisotopic mass. It is an object that contains "low" and "high". Those values will be divided by the charge of the current molecular formula. Default: zone: {low: -0.5, high: 4.5}
+  * bestOf : keep only the best result in the defined range of mass. By default, 0 = not used
+  * maxResults : keep only the best similarity. This process is done after "bestOf". By default: 500
+  * minSimilarity : minimal similarity value (between 0 and 1). By default: 50
 
 ### combineMFs(array)
 
