@@ -1,6 +1,6 @@
 /**
  * chemcalc-extended - chemcalc-extended project - extends chemcalc with new methods
- * @version v1.4.0
+ * @version v1.4.1
  * @link https://github.com/cheminfo-js/chemcalc-extended
  * @license MIT
  */
@@ -121,7 +121,7 @@ CE.bestResults = function(results, bestOf, maxResults, minSimilarity) {
     if (bestOf) {
         for (var i=0; i<results.length && newResults.length<maxResults; i++) {
             for (var j=0; j<newResults.length; j++) {
-                if (Math.abs(newResults[j].em-results[i].em)<bestOf) {
+                if (Math.abs(newResults[j].msem-results[i].msem)<(bestOf/(results[i].charge || 1))) {
                     break;
                 }
             }
