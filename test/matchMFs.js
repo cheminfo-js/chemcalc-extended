@@ -58,11 +58,11 @@ var options = {
 var result2=CE.matchMFs(possibleMFs, experimental, options);
 
 describe('chemcalc-extended matchMFs - maxResults and bestOf', function () {
-    it('Check results element 0', function () {
-        result2.results.length.should.equal(5);
+    it('Check results size, element 0 and 4', function () {
+        result2.results.length.should.equal(6);
         result2.results[0].em.should.equal(48.00114);
         result2.results[0].similarity.should.equal(18.53);
-        result2.results[4].em.should.equal(60.00114);
+        result2.results[4].em.should.equal(12);
         result2.results[4].similarity.should.equal(0);
     });
 });
