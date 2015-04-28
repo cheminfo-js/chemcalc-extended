@@ -15,12 +15,11 @@ var options = {
     from: 216.5,
     to: 223.5,
     decimalsPPM: 4,
-    decimalsMass: 5,
-    experimental: experimental
+    decimalsMass: 5
 };
 
 
-var result=CE.mfFromMonoisotopicMass(217.105, options);
+var result=CE.mfFromMonoisotopicMassSimilarity(217.105, experimental, options);
 
 describe('chemcalc-extended test', function () {
     it('Check options', function () {

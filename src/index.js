@@ -2,16 +2,19 @@
 
 
 var CC = require("chemcalc");
-var Similarity = require("peaks-similarity");
+
+var MFProcessor = require('./mfProcessor');
 
 
 var CE=exports;
 
 CE.analyseMF=CC.analyseMF;
 CE.getInfo=CC.getInfo;
+CE.mfFromMonoisotopicMass=CC.mfFromMonoisotopicMass;
 
 
 /*
+mfFromMonoisotopicMassSimilarity
 We will extend mfFromMonoisotopicMass in order to include in the options:
 * experimental : an array of [[x1,y1],[x2,y2],...] or [[x1,x2,x3,...][y1,y2,y3,...]]
 * widthTop : top width of the trapezoid
@@ -24,65 +27,40 @@ We will extend mfFromMonoisotopicMass in order to include in the options:
 * decimalsMass : number odecimals for the mass
  */
 
-CE.mfFromMonoisotopicMass = function(mass, options) {
-    var factorPPM, factorMass;
-    if (! options) throw "Options are mandatory";
-    if (! options.experimental) throw "You need to have an experimental list of peaks in options.experimental. Otherwise simply use chemcalc-js";
-
+CE.mfFromMonoisotopicMassSimilarity = function(mass, experimental, options) {
     var mfResults = CC.mfFromMonoisotopicMass(mass, options);
-    var similarity=new Similarity({widthTop: options.widthTop, widthBottom: options.widthBottom});
-    similarity.setFromTo(options.from, options.to);
-    similarity.setPeaks1(options.experimental);
+
+    var processor = new MFProcessor(experimental, options);
+
 
     var results=mfResults.results;
-
-    if (options.decimalsPPM) factorPPM=Math.pow(10,options.decimalsPPM);
-    if (options.decimalsMass) factorMass=Math.pow(10,options.decimalsMass);
-
-    // we could improve a little bit the result ...
-
-    // TODO this is the limiting step. There should be an option to allow multithread !!!
-
-
     for (var i=0; i<results.length; i++) {
         var result=results[i];
-        processMF(result, similarity, result.mf.value, options);
-        if (factorPPM) result.ppm=Math.round(result.ppm*factorPPM)/factorPPM;
-        if (factorMass) result.em=Math.round(result.em*factorMass)/factorMass;
+        processor.process(result.mf.value, result);
     }
-    mfResults.extractExperimental=similarity.getExtract1();
+    mfResults.extractExperimental=processor.similarity.getExtract1();
     return mfResults;
 }
 
 
 CE.matchMFs = function(mfsArray, experimental, options) {
-    var factorMass;
     options=options||{};
     options.addExperimentalExtract=true;
     options.maxResults=options.maxResults || 500;
     options.minSimilarity=(isNaN(options.minSimilarity)) ? 50 : options.minSimilarity;
 
-    var similarity=new Similarity({widthTop: options.widthTop, widthBottom: options.widthBottom});
-    similarity.setPeaks1(experimental);
-
+    var processor = new MFProcessor(experimental, options);
     var mfs=CE.combineMFs(mfsArray);
-
-    if (options.decimalsMass) factorMass=Math.pow(10,options.decimalsMass);
 
     var results=[];
     for (var i=0; i<mfs.length; i++) {
         console.log("Analysing: "+(i+1)+"/"+mfs.length+" ("+mfs[i].mf+")");
-        var result={};
+        var result = processor.process(mfs[i].mf);
         results.push(result);
-        processMF(result, similarity, mfs[i].mf, options);
         result.parts=mfs[i];
-        if (factorMass) result.em=Math.round(result.em*factorMass)/factorMass;
-        if (factorMass && result.msem) result.msem=Math.round(result.msem*factorMass)/factorMass;
-
         if (results.length>options.maxResults*2) {
             results=CE.bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
         }
-
     }
     results=CE.bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
     return {options: options, results:results};
@@ -234,46 +212,5 @@ CE.combineMFs=function (keys) {
 }
 
 
-function processMF(result, similarity, mf, options) {
-    options=options || {};
-    options.isotopomers="arrayXYXY";
-    var ccResult=CC.analyseMF(mf, options);
 
-    var from, to;
-    if (options.from && options.to) {
-        from=options.from
-        to=options.to;
-    } else {
-        var charge=Math.abs(ccResult.parts[0].charge || 1);
-        options.zone = options.zone || {};
-        if (!options.zone.low) options.zone.low = -0.5;
-        if (!options.zone.high) options.zone.high = 4.5;
-
-        var target=ccResult.parts[0].msem || ccResult.parts[0].em;
-        from=target+options.zone.low/charge;
-        to=target+options.zone.high/charge;
-    }
-
-    similarity.setFromTo(from, to);
-    similarity.setPeaks2(ccResult.arrayXYXY);
-
-    var similarityResult=similarity.getSimilarity();
-
-
-    if (! result.em) result.em=ccResult.em;
-    if (! result.info) result.info=mf;
-    if (! result.mf) result.mf=ccResult.mf;
-    if (! result.charge) result.charge=ccResult.parts[0].charge || 0;
-    if (! result.msem) result.msem=ccResult.parts[0].msem || 0;
-    result.fromTo={from: from, to:to};
-    result.extract=similarityResult.extract2;
-    result.extractInfo=similarityResult.extractInfo2;
-    result.diff=similarityResult.diff;
-    result.similarity=Math.floor(similarityResult.similarity*1e4)/1e2;
-    result.color="hsla("+Math.round(similarityResult.similarity*120)+",100%,60%,0.6)";
-    if (options.addExperimentalExtract) {
-        result.extractExperimental=similarityResult.extract1;
-        result.extractInfoExperimental=similarityResult.extractInfo1;
-    }
-}
 
