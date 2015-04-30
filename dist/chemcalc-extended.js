@@ -1,291 +1,214 @@
 /**
  * chemcalc-extended - chemcalc-extended project - extends chemcalc with new methods
- * @version v1.4.1
+ * @version v1.4.2
  * @link https://github.com/cheminfo-js/chemcalc-extended
  * @license MIT
  */
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.chemcalcExtended=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
 
+var CC = require('chemcalc');
+var MfProcessor = exports.MfProcessor = require('./MfProcessor');
 
-var CC = require("chemcalc");
-var Similarity = require("peaks-similarity");
+var CE = exports;
 
-
-var CE=exports;
-
-CE.analyseMF=CC.analyseMF;
-CE.getInfo=CC.getInfo;
-
+CE.analyseMF = CC.analyseMF;
+CE.getInfo = CC.getInfo;
+CE.mfFromMonoisotopicMass = CC.mfFromMonoisotopicMass;
 
 /*
-We will extend mfFromMonoisotopicMass in order to include in the options:
-* experimental : an array of [[x1,y1],[x2,y2],...] or [[x1,x2,x3,...][y1,y2,y3,...]]
-* widthTop : top width of the trapezoid
-* widthBottom : bottom width of the trapezoid
-* from : mass "from" which calculate the similarity
-* to : mass "to" which calculate the similarity
-* As an alternative the from / to parameters can be calculated based target mass
-*
-* decimalsPPM : number of decimals for PPM
-* decimalsMass : number odecimals for the mass
+ mfFromMonoisotopicMassSimilarity
+ We will extend mfFromMonoisotopicMass in order to include in the options:
+ * experimental : an array of [[x1,y1],[x2,y2],...] or [[x1,x2,x3,...][y1,y2,y3,...]]
+ * widthTop : top width of the trapezoid
+ * widthBottom : bottom width of the trapezoid
+ * from : mass "from" which calculate the similarity
+ * to : mass "to" which calculate the similarity
+ * As an alternative the from / to parameters can be calculated based target mass
+ *
+ * decimalsPPM : number of decimals for PPM
+ * decimalsMass : number odecimals for the mass
  */
-
-CE.mfFromMonoisotopicMass = function(mass, options) {
-    var factorPPM, factorMass;
-    if (! options) throw "Options are mandatory";
-    if (! options.experimental) throw "You need to have an experimental list of peaks in options.experimental. Otherwise simply use chemcalc-js";
-
+CE.mfFromMonoisotopicMassSimilarity = function (mass, experimental, options) {
     var mfResults = CC.mfFromMonoisotopicMass(mass, options);
-    var similarity=new Similarity({widthTop: options.widthTop, widthBottom: options.widthBottom});
-    similarity.setFromTo(options.from, options.to);
-    similarity.setPeaks1(options.experimental);
 
-    var results=mfResults.results;
-
-    if (options.decimalsPPM) factorPPM=Math.pow(10,options.decimalsPPM);
-    if (options.decimalsMass) factorMass=Math.pow(10,options.decimalsMass);
-
-    // we could improve a little bit the result ...
-
-    // TODO this is the limiting step. There should be an option to allow multithread !!!
+    var processor = new MfProcessor(experimental, options);
 
 
-    for (var i=0; i<results.length; i++) {
-        var result=results[i];
-        processMF(result, similarity, result.mf.value, options);
-        if (factorPPM) result.ppm=Math.round(result.ppm*factorPPM)/factorPPM;
-        if (factorMass) result.em=Math.round(result.em*factorMass)/factorMass;
+    var results = mfResults.results;
+    for (var i = 0; i < results.length; i++) {
+        var result = results[i];
+        processor.process(result.mf.value, result);
     }
-    mfResults.extractExperimental=similarity.getExtract1();
+    mfResults.extractExperimental = processor.similarity.getExtract1();
     return mfResults;
-}
+};
 
 
-CE.matchMFs = function(mfsArray, experimental, options) {
-    var factorMass;
-    options=options||{};
-    options.addExperimentalExtract=true;
-    options.maxResults=options.maxResults || 500;
-    options.minSimilarity=(isNaN(options.minSimilarity)) ? 50 : options.minSimilarity;
+CE.matchMFs = function (mfsArray, experimental, options) {
+    options = options || {};
+    options.addExperimentalExtract = true;
+    options.maxResults = options.maxResults || 500;
+    options.minSimilarity = (isNaN(options.minSimilarity)) ? 50 : options.minSimilarity;
 
-    var similarity=new Similarity({widthTop: options.widthTop, widthBottom: options.widthBottom});
-    similarity.setPeaks1(experimental);
+    var processor = new MfProcessor(experimental, options);
+    var mfs = CE.combineMFs(mfsArray);
 
-    var mfs=CE.combineMFs(mfsArray);
-
-    if (options.decimalsMass) factorMass=Math.pow(10,options.decimalsMass);
-
-    var results=[];
-    for (var i=0; i<mfs.length; i++) {
-        console.log("Analysing: "+(i+1)+"/"+mfs.length+" ("+mfs[i].mf+")");
-        var result={};
+    var results = [];
+    for (var i = 0; i < mfs.length; i++) {
+        var result = processor.process(mfs[i].mf);
         results.push(result);
-        processMF(result, similarity, mfs[i].mf, options);
-        result.parts=mfs[i];
-        if (factorMass) result.em=Math.round(result.em*factorMass)/factorMass;
-        if (factorMass && result.msem) result.msem=Math.round(result.msem*factorMass)/factorMass;
-
-        if (results.length>options.maxResults*2) {
-            results=CE.bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
+        result.parts = mfs[i];
+        if (results.length > options.maxResults * 2) {
+            results = CE.bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
         }
-
     }
-    results=CE.bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
-    return {options: options, results:results};
-}
+    results = CE.bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
+    return {options: options, results: results};
+};
 
 /* we have 2 criteria to find the best results
-1. best match per zone based on the bestOf parameter
-2. maxResults : maximal number of results
-*/
-CE.bestResults = function(results, bestOf, maxResults, minSimilarity) {
-    var newResults=[];
+ 1. best match per zone based on the bestOf parameter
+ 2. maxResults : maximal number of results
+ */
+CE.bestResults = function (results, bestOf, maxResults, minSimilarity) {
+    var newResults = [];
 
     // in order to find the bestOf we will sort by similarity and take all of them for which there is nothing in a range
     // of the bestOf range
 
-    var results=results.sort(function(a,b) {
-        return b.similarity-a.similarity;
+    results.sort(function (a, b) {
+        return b.similarity - a.similarity;
     });
 
     if (minSimilarity) {
-        for (var i=0; i<results.length; i++) {
-            if (results[i].similarity<minSimilarity) {
-                results=results.slice(0, i);
+        for (var i = 0; i < results.length; i++) {
+            if (results[i].similarity < minSimilarity) {
+                results = results.slice(0, i);
                 break;
             }
         }
     }
 
     if (bestOf) {
-        for (var i=0; i<results.length && newResults.length<maxResults; i++) {
-            for (var j=0; j<newResults.length; j++) {
-                if (Math.abs(newResults[j].msem-results[i].msem)<(bestOf/(results[i].charge || 1))) {
+        for (var i = 0; i < results.length && newResults.length < maxResults; i++) {
+            for (var j = 0; j < newResults.length; j++) {
+                if (Math.abs(newResults[j].msem - results[i].msem) < (bestOf / (results[i].charge || 1))) {
                     break;
                 }
             }
-            if (j==newResults.length) {
+            if (j == newResults.length) {
                 newResults.push(results[i]);
             }
         }
     } else {
-        newResults=results.slice(0,maxResults);
+        newResults = results.slice(0, maxResults);
     }
 
-
     return newResults;
+};
 
 
-}
-
-
-
-CE.getEutrophicationPotential=function(mf) {
-    var chemcalc=CC.analyseMF(mf);
-    var atoms=chemcalc.parts[0].ea;
-    var mw=chemcalc.mw;
-    var nC=0, nO=0, nN=0, nP=0, nH=0;
-    for (var i=0; i<atoms.length; i++) {
-        var atom=atoms[i];
-        switch(atom.element) {
-            case "C":
-                nC=atom.number;
+CE.getEutrophicationPotential = function (mf) {
+    var chemcalc = CC.analyseMF(mf);
+    var atoms = chemcalc.parts[0].ea;
+    var mw = chemcalc.mw;
+    var nC = 0, nO = 0, nN = 0, nP = 0, nH = 0;
+    for (var i = 0; i < atoms.length; i++) {
+        var atom = atoms[i];
+        switch (atom.element) {
+            case 'C':
+                nC = atom.number;
                 break;
-            case "N":
-                nN=atom.number;
+            case 'N':
+                nN = atom.number;
                 break;
-            case "O":
-                nO=atom.number;
+            case 'O':
+                nO = atom.number;
                 break;
-            case "H":
-                nH=atom.number;
+            case 'H':
+                nH = atom.number;
                 break;
-            case "P":
-                nP=atom.number;
+            case 'P':
+                nP = atom.number;
                 break;
             default:
-                return {log:"EP can not be calculated because the MF contains the element: "+atom.element}
+                return {log: 'EP can not be calculated because the MF contains the element: ' + atom.element};
         }
     }
 
-    var vRef=1;
-    var mwRef=94.97;
+    var vRef = 1;
+    var mwRef = 94.97;
 
-    var thOD = nC + (nH-3*nN)/4 - nO/2;
-    var v = nP + nN/16 + thOD/138;
-    var ep = (v / mw) / (vRef / mwRef)
+    var thOD = nC + (nH - 3 * nN) / 4 - nO / 2;
+    var v = nP + nN / 16 + thOD / 138;
+    var ep = (v / mw) / (vRef / mwRef);
 
     return {
         v: v,
         thOD: thOD,
         ep: ep,
-        mf: {type:"mf", value:mf},
+        mf: {type: 'mf', value: mf},
         mw: chemcalc.mw,
-        log:"Successful calculation"
-    }
-}
+        log: 'Successful calculation'
+    };
+};
 
 
-CE.combineMFs=function (keys) {
+CE.combineMFs = function (keys) {
     function appendResult(results, currents, keys) {
         // this script is designed to combine molecular formula
         // that may contain comments after a "$" sign
         // therefore we should put all the comments at the ned
-        var result={"mf":""};
-        var comments=[];
-        for (var i=0; i<keys.length; i++) {
-            var key=keys[i][currents[i]];
+        var result = {mf: ''};
+        var comments = [];
+        for (var i = 0; i < keys.length; i++) {
+            var key = keys[i][currents[i]];
             if (key) {
-                result["part"+(i+1)]=key;
-                if (key.indexOf("$")>-1) {
-                    comments.push(key.replace(/^[^$]*\$/,""));
-                    key=key.replace(/\$.*/,"");
+                result['part' + (i + 1)] = key;
+                if (key.indexOf('$') > -1) {
+                    comments.push(key.replace(/^[^$]*\$/, ''));
+                    key = key.replace(/\$.*/, '');
                 }
-                result.mf+=key;
+                result.mf += key;
             }
         }
 
-        if (comments.length>0) result.mf+="$"+comments.join(" ");
+        if (comments.length > 0) result.mf += '$' + comments.join(' ');
 
         results.push(result);
     }
 
-    if (! Array.isArray(keys)) return [];
-    if (! Array.isArray(keys[0])) keys=[keys];
-    var results=[];
-    var sizes=new Array(keys.length);
-    var currents=new Array(keys.length);
-    for (var i=0; i<keys.length; i++) {
-        sizes[i]=keys[i].length-1;
-        currents[i]=0;
+    if (!Array.isArray(keys)) return [];
+    if (!Array.isArray(keys[0])) keys = [keys];
+    var results = [];
+    var sizes = new Array(keys.length);
+    var currents = new Array(keys.length);
+    for (var i = 0; i < keys.length; i++) {
+        sizes[i] = keys[i].length - 1;
+        currents[i] = 0;
     }
-    var position=0;
-    var evolution=0;
+    var position = 0;
+    var evolution = 0;
 
-    while (position<currents.length) {
-        if (currents[position]<sizes[position]) {
+    while (position < currents.length) {
+        if (currents[position] < sizes[position]) {
             evolution++;
             appendResult(results, currents, keys);
             currents[position]++;
-            for (var i=0; i<position; i++) {
-                currents[i]=0;
+            for (var i = 0; i < position; i++) {
+                currents[i] = 0;
             }
-            position=0;
+            position = 0;
         } else {
             position++;
         }
     }
     appendResult(results, currents, keys);
     return results;
-}
+};
 
-
-function processMF(result, similarity, mf, options) {
-    options=options || {};
-    options.isotopomers="arrayXYXY";
-    var ccResult=CC.analyseMF(mf, options);
-
-    var from, to;
-    if (options.from && options.to) {
-        from=options.from
-        to=options.to;
-    } else {
-        var charge=Math.abs(ccResult.parts[0].charge || 1);
-        options.zone = options.zone || {};
-        if (!options.zone.low) options.zone.low = -0.5;
-        if (!options.zone.high) options.zone.high = 4.5;
-
-        var target=ccResult.parts[0].msem || ccResult.parts[0].em;
-        from=target+options.zone.low/charge;
-        to=target+options.zone.high/charge;
-    }
-
-    similarity.setFromTo(from, to);
-    similarity.setPeaks2(ccResult.arrayXYXY);
-
-    var similarityResult=similarity.getSimilarity();
-
-
-    if (! result.em) result.em=ccResult.em;
-    if (! result.info) result.info=mf;
-    if (! result.mf) result.mf=ccResult.mf;
-    if (! result.charge) result.charge=ccResult.parts[0].charge || 0;
-    if (! result.msem) result.msem=ccResult.parts[0].msem || 0;
-    result.fromTo={from: from, to:to};
-    result.extract=similarityResult.extract2;
-    result.extractInfo=similarityResult.extractInfo2;
-    result.diff=similarityResult.diff;
-    result.similarity=Math.floor(similarityResult.similarity*1e4)/1e2;
-    result.color="hsla("+Math.round(similarityResult.similarity*120)+",100%,60%,0.6)";
-    if (options.addExperimentalExtract) {
-        result.extractExperimental=similarityResult.extract1;
-        result.extractInfoExperimental=similarityResult.extractInfo1;
-    }
-}
-
-
-},{"chemcalc":4,"peaks-similarity":5}],2:[function(require,module,exports){
+},{"./MfProcessor":6,"chemcalc":4}],2:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -1465,5 +1388,76 @@ function calculateOverlapFromDiff(diffs) {
     }
     return 1-sumPos;
 }
-},{}]},{},[1])(1)
+},{}],6:[function(require,module,exports){
+'use strict';
+
+var CC = require('chemcalc');
+var Similarity = require('peaks-similarity');
+
+function MfProcessor(experimental, options) {
+    // we will clone the options to be sure ...
+    this.options = JSON.parse(JSON.stringify(options || {}));
+    this.options.isotopomers = 'arrayXYXY';
+    // init with options ans experimental spectrum
+    this.options.zone = this.options.zone || {};
+    if (!this.options.zone.low) this.options.zone.low = -0.5;
+    if (!this.options.zone.high) this.options.zone.high = 4.5;
+
+    if (this.options.decimalsMass) this.factorMass = Math.pow(10, this.options.decimalsMass);
+    if (this.options.decimalsPPM) this.factorPPM = Math.pow(10, this.options.decimalsPPM);
+
+    this.similarity = new Similarity({
+        widthTop: this.options.widthTop,
+        widthBottom: this.options.widthBottom
+    });
+    this.similarity.setPeaks1(experimental);
+}
+
+MfProcessor.prototype.process = function (mf, result) {
+    // we allow to add information on an existing result
+    result = result || {};
+    var ccResult = CC.analyseMF(mf, this.options);
+
+    var from, to;
+    if (this.options.from && this.options.to) {
+        from = this.options.from;
+        to = this.options.to;
+    } else {
+        var charge = Math.abs(ccResult.parts[0].charge || 1);
+        var target = ccResult.parts[0].msem || ccResult.parts[0].em;
+        from = target + this.options.zone.low / charge;
+        to = target + this.options.zone.high / charge;
+    }
+
+    this.similarity.setFromTo(from, to);
+    this.similarity.setPeaks2(ccResult.arrayXYXY);
+
+    var similarityResult = this.similarity.getSimilarity();
+
+    if (!result.em) result.em = ccResult.em;
+    if (!result.info) result.info = mf;
+    if (!result.mf) result.mf = ccResult.mf;
+    if (!result.charge) result.charge = ccResult.parts[0].charge || 0;
+    if (!result.msem) result.msem = ccResult.parts[0].msem || 0;
+    result.fromTo = {from: from, to: to};
+    result.extract = similarityResult.extract2;
+    result.extractInfo = similarityResult.extractInfo2;
+    result.diff = similarityResult.diff;
+    result.similarity = Math.floor(similarityResult.similarity * 1e4) / 1e2;
+    result.color = 'hsla(' + Math.round(similarityResult.similarity * 120) + ',100%,60%,0.6)';
+    if (this.options.addExperimentalExtract) {
+        result.extractExperimental = similarityResult.extract1;
+        result.extractInfoExperimental = similarityResult.extractInfo1;
+    }
+
+    if (this.factorPPM) result.ppm = Math.round(result.ppm * this.factorPPM) / this.factorPPM;
+    if (this.factorMass) result.em = Math.round(result.em * this.factorMass) / this.factorMass;
+    if (this.factorMass && result.msem) result.msem = Math.round(result.msem * this.factorMass) / this.factorMass;
+
+    return result;
+};
+
+module.exports = MfProcessor;
+
+},{"chemcalc":4,"peaks-similarity":5}]},{},[1])(1)
 });
