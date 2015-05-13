@@ -84,10 +84,6 @@ var result3=CE.matchMFs(possibleMFs, experimental, options);
 
 describe('chemcalc-extended matchMFs - minSimilarity=10', function () {
     it('Check results element 0', function () {
-        for (var i=0; i<result.results.length; i++) {
-            console.log(result.results[i].similarity, result.results[i].em);
-        }
-
         result3.results.length.should.equal(3);
         result3.results[0].em.should.equal(48.00114);
         result3.results[0].similarity.should.equal(18.53);
