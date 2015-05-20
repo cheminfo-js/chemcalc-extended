@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "chemcalc": "^2.1.6",
-    "peaks-similarity": "^1.2.1"
+    "peaks-similarity": "^1.2.1",
+    "peptide": "0.0.1"
   }
 }

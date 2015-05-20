@@ -1,6 +1,7 @@
 'use strict';
 
 var CC = require('chemcalc');
+var PEP = require('peptide');
 var MfProcessor = exports.MfProcessor = require('./MfProcessor');
 
 var CE = exports;
@@ -147,6 +148,19 @@ CE.getEutrophicationPotential = function (mf) {
     };
 };
 
+
+CE.convertAASequence = function (sequence) {
+    return PEP.convertAASequence(sequence);
+}
+
+CE.chargePeptide = function (sequence) {
+    return PEP.chargePeptide(sequence);
+}
+
+
+CE.generatePeptideFragments = function (sequence, options) {
+    return PEP.generatePeptideFragments(sequence, options);
+}
 
 CE.combineMFs = function (keys) {
     function appendResult(results, currents, keys) {
