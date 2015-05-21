@@ -45,7 +45,7 @@
     "vinyl-source-stream": "^1.0.0"
   },
   "dependencies": {
-    "chemcalc": "^3.0.0",
+    "chemcalc": "^3.0.1",
     "peaks-similarity": "^1.2.1",
     "peptide": "0.0.1"
   }
