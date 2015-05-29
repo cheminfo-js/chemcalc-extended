@@ -15,9 +15,11 @@ function MfProcessor(experimental, options) {
     if (this.options.decimalsMass) this.factorMass = Math.pow(10, this.options.decimalsMass);
     if (this.options.decimalsPPM) this.factorPPM = Math.pow(10, this.options.decimalsPPM);
 
+
     this.similarity = new Similarity({
         widthTop: this.options.widthTop,
-        widthBottom: this.options.widthBottom
+        widthBottom: this.options.widthBottom,
+        common: this.options.common
     });
     this.similarity.setPeaks1(experimental);
 }

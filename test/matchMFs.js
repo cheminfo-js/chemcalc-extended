@@ -8,7 +8,7 @@ var possibleMFs=[["C","C2","HFO"],["","C","C2","(++)"]];
 
 var options = {
     typedResult: true,
-    resolution: 0.0001,
+    fwhm: 0.0001,
     widthTop: 1e-2,
     widthBottom: 2e-2,
     range: {low: 0.5, high: 5},
@@ -43,7 +43,7 @@ describe('chemcalc-extended matchMFs', function () {
 
 var options = {
     typedResult: true,
-    resolution: 0.0001,
+    fwhm: 0.0001,
     widthTop: 1e-2,
     widthBottom: 2e-2,
     range: {low: 0.5, high: 5},
@@ -70,7 +70,7 @@ describe('chemcalc-extended matchMFs - maxResults and bestOf', function () {
 
 var options = {
     typedResult: true,
-    resolution: 0.0001,
+    fwhm: 0.0001,
     widthTop: 1e-2,
     widthBottom: 2e-2,
     range: {low: 0.5, high: 5},
@@ -91,4 +91,3 @@ describe('chemcalc-extended matchMFs - minSimilarity=10', function () {
         result3.results[2].similarity.should.equal(17.99);
     });
 });
-
