@@ -16,6 +16,11 @@ chemcalc-extended project - Extend chemcalc-js to allow experimental spectra sim
 options are the same as mfFromMonoisotopicMass with the following added possibilities:
 * widthTop : top width of the trapezoid
 * widthBottom : bottom width of the trapezoid
+* widthFunction : code that allows to calculate the `widthBottom` and `widthTop` from `mass` and `charge`.
+```js
+var widthTop=mass*0.005;
+var widthBottom=mass*0.010;
+```
 * from : mass "from" which calculate the similarity
 * to : mass "to" which calculate the similarity
 * decimalsPPM : number of decimals for PPM
