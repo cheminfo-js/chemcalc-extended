@@ -1,6 +1,6 @@
 /**
  * chemcalc-extended - chemcalc-extended project - extends chemcalc with new methods
- * @version v1.7.0
+ * @version v1.7.1
  * @link https://github.com/cheminfo-js/chemcalc-extended
  * @license MIT
  */
@@ -1999,6 +1999,15 @@ function MfProcessor(experimental, options) {
     if (this.options.decimalsMass) this.factorMass = Math.pow(10, this.options.decimalsMass);
     if (this.options.decimalsPPM) this.factorPPM = Math.pow(10, this.options.decimalsPPM);
 
+    this.widthFunction=undefined;
+    if (this.options.widthFunction) {
+         this.widthFunction = new Function('mass', 'charge',
+            this.options.widthFunction + ";"+
+            "return {widthBottom: widthBottom, widthTop: widthTop};"
+         );
+
+    }
+
 
     this.similarity = new Similarity({
         widthTop: this.options.widthTop,
@@ -2013,16 +2022,23 @@ MfProcessor.prototype.process = function (mf, result) {
     result = result || {};
     var ccResult = CC.analyseMF(mf, this.options);
 
+    var charge = Math.abs(ccResult.parts[0].charge || 1);
+    var target = ccResult.parts[0].msem || ccResult.parts[0].em;
+
     var from, to;
     if (this.options.from && this.options.to) {
         from = this.options.from;
         to = this.options.to;
     } else {
-        var charge = Math.abs(ccResult.parts[0].charge || 1);
-        var target = ccResult.parts[0].msem || ccResult.parts[0].em;
         from = target + this.options.zone.low / charge;
         to = target + this.options.zone.high / charge;
     }
+
+    if (this.widthFunction) {
+        var width=this.widthFunction(target, charge)
+        this.similarity.setTrapezoid(width.widthBottom, width.widthTop);
+    }
+
 
     this.similarity.setFromTo(from, to);
     this.similarity.setPeaks2(ccResult.arrayXYXY);
