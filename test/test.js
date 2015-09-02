@@ -15,7 +15,9 @@ var options = {
     from: 216.5,
     to: 223.5,
     decimalsPPM: 4,
-    decimalsMass: 5
+    decimalsMass: 5,
+    useUnsaturation: true,
+    integerUnsaturation: true
 };
 
 

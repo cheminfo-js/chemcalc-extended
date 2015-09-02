@@ -1,8 +1,12 @@
 'use strict';
 
+var Stat=require('ml-stat');
+
 var CC = require('chemcalc');
 var PEP = require('peptide');
 var MfProcessor = exports.MfProcessor = require('./MfProcessor');
+
+var massPeakPicking = require('./massPeakPicking');
 
 var CE = exports;
 
@@ -214,3 +218,7 @@ CE.combineMFs = function (keys) {
     appendResult(results, currents, keys);
     return results;
 };
+
+
+CE.massPeakPicking = massPeakPicking;
+
