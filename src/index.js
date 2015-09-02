@@ -5,7 +5,7 @@ var CC = require('chemcalc');
 var PEP = require('peptide');
 var MfProcessor = exports.MfProcessor = require('./MfProcessor');
 
-var massPeakPicking = require('./xxx');
+var massPeakPicking = require('./massPeakPicking');
 
 var CE = exports;
 
