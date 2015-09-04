@@ -32,7 +32,7 @@ var possibleMFs=[["C10H18O3S"]];
 describe('chemcalc-extended matchMFs - check the common parameter 2', function () {
     it('Check common "second"', function () {
 
-        let options = {
+        var options = {
             typedResult: true,
             fwhm: 0.0001,
             widthTop: 2e-3,
@@ -49,12 +49,12 @@ describe('chemcalc-extended matchMFs - check the common parameter 2', function (
 
         result.results.length.should.equal(1);
         result.results[0].extractExperimental.length.should.equal(2);
-        result.results[0].extract.length.should.equal(27);
+        result.results[0].extract[0].length.should.equal(27);
     });
 
     it('Check common "first"', function () {
 
-        let options = {
+        var options = {
             typedResult: true,
             fwhm: 0.0001,
             widthTop: 2e-3,
@@ -69,13 +69,13 @@ describe('chemcalc-extended matchMFs - check the common parameter 2', function (
         var result=CE.matchMFs(possibleMFs, experimental, options);
 
         result.results.length.should.equal(1);
-        result.results[0].extractExperimental.length.should.equal(20);
+        result.results[0].extractExperimental[0].length.should.equal(20);
         result.results[0].extract.length.should.equal(2);
     });
 
     it('Check common "true"', function () {
 
-        let options = {
+        var options = {
             typedResult: true,
             fwhm: 0.0001,
             widthTop: 2e-3,
@@ -96,7 +96,7 @@ describe('chemcalc-extended matchMFs - check the common parameter 2', function (
 
     it('Check common "false"', function () {
 
-        let options = {
+        var options = {
             typedResult: true,
             fwhm: 0.0001,
             widthTop: 2e-3,
@@ -111,8 +111,9 @@ describe('chemcalc-extended matchMFs - check the common parameter 2', function (
         var result=CE.matchMFs(possibleMFs, experimental, options);
 
         result.results.length.should.equal(1);
-        result.results[0].extractExperimental.length.should.equal(20);
-        result.results[0].extract.length.should.equal(27);
+        result.results[0].extractExperimental.length.should.equal(2);
+        result.results[0].extractExperimental[0].length.should.equal(20);
+        result.results[0].extract[0].length.should.equal(27);
     });
 
 });

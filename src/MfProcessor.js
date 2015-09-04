@@ -6,7 +6,7 @@ var Similarity = require('peaks-similarity');
 function MfProcessor(experimental, options) {
     // we will clone the options to be sure ...
     this.options = JSON.parse(JSON.stringify(options || {}));
-    this.options.isotopomers = 'arrayXYXY';
+    this.options.isotopomers = 'arrayXXYY';
     // init with options ans experimental spectrum
     this.options.zone = this.options.zone || {};
     if (!this.options.zone.low) this.options.zone.low = -0.5;
@@ -57,7 +57,7 @@ MfProcessor.prototype.process = function (mf, result) {
 
 
     this.similarity.setFromTo(from, to);
-    this.similarity.setPeaks2(ccResult.arrayXYXY);
+    this.similarity.setPeaks2(ccResult.arrayXXYY);
 
     var similarityResult = this.similarity.getSimilarity();
 
