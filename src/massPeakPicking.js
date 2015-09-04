@@ -10,8 +10,6 @@ function massPeakPicking(x, y) {
 // we calculate the noise
     var noiseLevel=Stat.array.median(y.filter(function(a) {return (a>0)}))*3;
 
-    console.log(noiseLevel);
-
     return gsd(x, y, {
         noiseLevel: noiseLevel
     });
@@ -64,7 +62,7 @@ function gsd(x, y, options){
     for (var i = 1; i < Y.length -1 ; i++){
         if ((dY[i] < dY[i-1]) && (dY[i] <= dY[i+1])||
             (dY[i] <= dY[i-1]) && (dY[i] < dY[i+1])) {
-            console.log(X[i])
+            //console.log(X[i])
             stackInt.push(X[i]);
         }
 
@@ -97,7 +95,7 @@ function gsd(x, y, options){
             if(Math.abs(frequency-(i[0]+i[1])/2)<Math.abs(i[0]-i[1])/2)
                 possible.push(i);
         }
-        console.log(possible);
+        //console.log(possible);
         //console.log("possible "+possible.length);
         if (possible.length > 0)
             if (possible.length == 1)
@@ -105,7 +103,7 @@ function gsd(x, y, options){
                 var inter = possible[0];
                 var linewidth = Math.abs(inter[1] - inter[0]);
                 var height = f[1];
-                console.log(height, options.minMaxRatio, Y[0]);
+                //console.log(height, options.minMaxRatio, Y[0]);
                 if (Math.abs(height) > options.minMaxRatio*Y[0]) {
                     signals.push({
                         x: frequency,
@@ -117,7 +115,7 @@ function gsd(x, y, options){
             else
             {
                 //TODO: nested peaks
-                console.log("Nested "+possible);
+                //console.log("Nested "+possible);
             }
     }
 

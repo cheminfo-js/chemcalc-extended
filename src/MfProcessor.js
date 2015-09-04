@@ -4,8 +4,8 @@ var CC = require('chemcalc');
 var Similarity = require('peaks-similarity');
 
 function MfProcessor(experimental, options) {
-    // we will clone the options to be sure ...
-    this.options = JSON.parse(JSON.stringify(options || {}));
+    // we will copy the options to be sure ...
+    this.options=Object.create(options || {});
     this.options.isotopomers = 'arrayXXYY';
     // init with options ans experimental spectrum
     this.options.zone = this.options.zone || {};

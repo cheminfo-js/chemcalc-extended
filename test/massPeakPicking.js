@@ -11,7 +11,6 @@ var xy=spectrum.arrayXXYY;
 
 var result=CE.massPeakPicking(xy[0], xy[1]);
 
-console.log(result);
 
 describe('Check the peak picking', function () {
     it('Check result', function () {

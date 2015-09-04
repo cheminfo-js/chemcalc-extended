@@ -4,6 +4,8 @@
 var CC = require('chemcalc');
 var PEP = require('peptide');
 var MfProcessor = exports.MfProcessor = require('./MfProcessor');
+exports.SimilarityProcessor = require('./SimilarityProcessor');
+exports.MFSimilarityProcessor = require('./MFSimilarityProcessor');
 
 var massPeakPicking = require('./massPeakPicking');
 
