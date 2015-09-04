@@ -60,8 +60,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	var CC = __webpack_require__(1);
 	var PEP = __webpack_require__(2);
 	var MfProcessor = exports.MfProcessor = __webpack_require__(5);
+	exports.SimilarityProcessor = __webpack_require__(10);
+	exports.MFSimilarityProcessor = __webpack_require__(11);
 
-	var massPeakPicking = __webpack_require__(7);
+	var massPeakPicking = __webpack_require__(12);
 
 	var CE = exports;
 
@@ -1539,9 +1541,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Similarity = __webpack_require__(6);
 
 	function MfProcessor(experimental, options) {
-	    // we will clone the options to be sure ...
-	    this.options = JSON.parse(JSON.stringify(options || {}));
-	    this.options.isotopomers = 'arrayXYXY';
+	    // we will copy the options to be sure ...
+	    this.options=Object.create(options || {});
+	    this.options.isotopomers = 'arrayXXYY';
 	    // init with options ans experimental spectrum
 	    this.options.zone = this.options.zone || {};
 	    if (!this.options.zone.low) this.options.zone.low = -0.5;
@@ -1592,7 +1594,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	    this.similarity.setFromTo(from, to);
-	    this.similarity.setPeaks2(ccResult.arrayXYXY);
+	    this.similarity.setPeaks2(ccResult.arrayXXYY);
 
 	    var similarityResult = this.similarity.getSimilarity();
 
@@ -1624,14 +1626,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 6 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	const COMMON_NO=0;
-	const COMMON_FIRST=1;
-	const COMMON_SECOND=2;
-	const COMMON_BOTH=3; // should be a binary operation !
+	var COMMON_NO=0;
+	var COMMON_FIRST=1;
+	var COMMON_SECOND=2;
+	var COMMON_BOTH=3; // should be a binary operation !
+
+	var Stat = __webpack_require__(7).array;
 
 
 	module.exports = function Comparator(options) {
@@ -1657,16 +1661,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	                common=COMMON_FIRST;
 	            } else if (options.common.toLowerCase()==='second') {
 	                common=COMMON_SECOND;
-	            } else {
-	                common=COMMON_BOTH;
-	            }
-	        } else {
-	            if (options.common) {
+	            } else if (options.common.toLowerCase()==='both') {
 	                common=COMMON_BOTH;
 	            } else {
 	                common=COMMON_NO;
 	            }
-
+	        } else {
+	            if (options.common==true) {
+	                common=COMMON_BOTH;
+	            } else {
+	                common=COMMON_NO;
+	            }
 	        }
 	        commonFactor=options.commonFactor || commonFactor || 4;
 
@@ -1682,6 +1687,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    function setPeaks1(anArray) {
 	        array1=checkArray(anArray);
+
 	        if (common) {
 	            var extracts=commonExtractAndNormalize(array1, array2, widthBottom, from, to, common);
 	            array1Extract=extracts.data1;
@@ -1773,6 +1779,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    // This is the old trapezoid similarity
 	    function getOverlapTrapezoid(x1, y1, x2, y2) {
+
 	        var factor=2/(widthTop+widthBottom); // correction for surface=1
 	        if (y1===0 || y2===0) return 0;
 	        if (x1===x2) { // they have the same position
@@ -1834,37 +1841,38 @@ return /******/ (function(modules) { // webpackBootstrap
 	    function calculateDiff() {
 	        // we need to take 2 pointers
 	        // and travel progressively between them ...
-	        var newSecond=[];
-	        for (var i=0; i<array2Extract.length; i++) {
-	            newSecond.push([array2Extract[i][0],array2Extract[i][1]]);
-	        }
-	        var newFirst=[];
-	        for (var i=0; i<array1Extract.length; i++) {
-	            newFirst.push([array1Extract[i][0],array1Extract[i][1]]);
-	        }
+	        var newFirst=[
+	            [].concat(array1Extract[0]),
+	            [].concat(array1Extract[1])
+	        ];
+	        var newSecond=[
+	            [].concat(array2Extract[0]),
+	            [].concat(array2Extract[1])
+	        ];
+	        var array1Length=array1Extract[0] ? array1Extract[0].length : 0;
+	        var array2Length=array2Extract[0] ? array2Extract[0].length : 0;
 
 	        var pos1=0;
 	        var pos2=0;
 	        var previous2=0;
-	        while (pos1<newFirst.length) {
-	            var diff=newFirst[pos1][0]-array2Extract[pos2][0];
+	        while (pos1<array1Length) {
+	            var diff=newFirst[0][pos1]-array2Extract[0][pos2];
 	            if (Math.abs(diff)<widthBottom) { // there is some overlap
 	                if (options.trapezoid) {
-	                    var overlap=getOverlapTrapezoid(newFirst[pos1][0], newFirst[pos1][1], newSecond[pos2][0], newSecond[pos2][1], widthTop, widthBottom);
-
+	                    var overlap=getOverlapTrapezoid(newFirst[0][pos1], newFirst[1][pos1], newSecond[0][pos2], newSecond[1][pos2], widthTop, widthBottom);
 	                } else {
-	                    var overlap=getOverlap(newFirst[pos1][0], newFirst[pos1][1], newSecond[pos2][0], newSecond[pos2][1], widthTop, widthBottom);
+	                    var overlap=getOverlap(newFirst[0][pos1], newFirst[1][pos1], newSecond[0][pos2], newSecond[1][pos2], widthTop, widthBottom);
 	                }
-	                newFirst[pos1][1]-=overlap;
-	                newSecond[pos2][1]-=overlap;
-	                if (pos2<(array2Extract.length-1)) {
+	                newFirst[1][pos1]-=overlap;
+	                newSecond[1][pos2]-=overlap;
+	                if (pos2<(array2Length-1)) {
 	                    pos2++;
 	                } else {
 	                    pos1++;
 	                    pos2=previous2;
 	                }
 	            } else {
-	                if (diff>0 && pos2<(array2Extract.length-1)) {
+	                if (diff>0 && pos2<(array2Length-1)) {
 	                    pos2++;
 	                    previous2=pos2;
 	                } else {
@@ -1884,14 +1892,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	    function checkArray(points) {
 	        // if it is already a 2D array of points, we just return them
-	        if (Array.isArray(points) && Array.isArray(points[0]) && points[0].length===2) return points;
-	        var xs=points[0];
-	        var ys=points[1];
-	        var array=[];
-	        for (var i=0; i<xs.length; i++) {
-	            array.push([xs[i],ys[i]]);
+	        if (Array.isArray(points) && Array.isArray(points[0]) && points.length===2) return points;
+	        var x=new Array(points.length);
+	        var y=new Array(points.length);
+	        for (var i=0; i<points.length; i++) {
+	            x[i]=points[i][0];
+	            y[i]=points[i][1];
 	        }
-	        return array;
+	        return [x,y];
 	    }
 
 	    function getSimilarity(newPeaks1, newPeaks2) {
@@ -1907,6 +1915,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return result;
 	    }
 
+	    /*
+	        This works mainly when you have a array1 that is fixed
+	        newPeaks2 have to be normalized ! (sum to 1)
+	     */
+	    function fastSimilarity(newPeaks2, from, to) {
+	        array1Extract=extract(array1, from, to);
+	        array2Extract=newPeaks2;
+	        if (common&COMMON_SECOND) array1Extract= getCommonArray(array1Extract, array2Extract, widthBottom)
+	        normalize(array1Extract);
+	        var diff=calculateDiff();
+	        return calculateOverlapFromDiff(diff);
+	    }
+
+
 	    this.setPeaks1 = setPeaks1;
 	    this.setPeaks2 = setPeaks2;
 	    this.getExtract1 = getExtract1;
@@ -1918,22 +1940,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.setTrapezoid = setTrapezoid;
 	    this.getSimilarity = getSimilarity;
 	    this.getCommonArray = getCommonArray;
+
+	    this.fastSimilarity = fastSimilarity;
+
 	};
 
 
 	// returns an new array based on array1 where there is a peak of array2 at a distance under width/2
 	function getCommonArray(array1, array2, width) {
-	    var newArray=[];
+	    var newArray=[[],[]];
 	    var pos2=0;
 	    width/=2;
 	    var j=0;
+	    var array1Length=array1[0] ? array1[0].length : 0;
+	    var array2Length=array2[0] ? array2[0].length : 0;
 
-	    for (var i=0; i<array1.length; i++) {
-	        while (pos2<array2.length && (array1[i][0]>(array2[pos2][0]+width))) {
+	    for (var i=0; i<array1Length; i++) {
+	        while (pos2<array2Length && (array1[0][i]>(array2[0][pos2]+width))) {
 	            pos2++;
 	        }
-	        if ((pos2<array2.length) && (array1[i][0]>array2[pos2][0]-width)) {
-	            newArray[j++]=array1[i];
+	        if ((pos2<array2Length) && (array1[0][i]>array2[0][pos2]-width)) {
+	            newArray[0][j]=array1[0][i];
+	            newArray[1][j]=array1[1][i];
+	            j++;
 	        }
 	    }
 	    return newArray;
@@ -1969,17 +1998,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function normalize(array) {
-	    var sum=0;
-	    var min=Number.MAX_VALUE;
-	    var max=Number.MIN_VALUE;
-	    for (var i=0; i<array.length; i++) {
-	        sum+=array[i][1];
-	        if (array[i][1]<min) min=array[i][1];
-	        if (array[i][1]>max) max=array[i][1];
-	    }
+	    var min=Stat.min(array[1]);
+	    var max=Stat.max(array[1]);
+	    var sum=Stat.sum(array[1]);
+	    var length=array[1] ? array[1].length : 0;
 	    if (sum!=0) {
-	        for (var i=0; i<array.length; i++) {
-	            array[i][1]/=sum;
+	        for (var i=0; i<length; i++) {
+	            array[1][i]/=sum;
 	        }
 	    }
 	    return {
@@ -2022,11 +2047,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function extract(array, from, to) {
-	    var newArray=[];
+	    var newArray=[[],[]];
 	    var j=0;
-	    for (var i=0; i<array.length; i++) {
-	        if ( (! from || array[i][0]>=from)  && (! to || array[i][0]<=to)) {
-	            newArray[j++] = [array[i][0], array[i][1]];
+	    var length=array[0] ? array[0].length : 0;
+	    for (var i=0; i<length; i++) {
+	        if ( (! from || array[0][i]>=from)  && (! to || array[0][i]<=to)) {
+	            newArray[0][j] = array[0][i];
+	            newArray[1][j] = array[1][i];
+	            j++
 	        }
 	    }
 	    return newArray;
@@ -2047,8 +2075,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function calculateOverlapFromDiff(diffs) {
 	    var sumPos=0;
-	    for (var i=0; i<diffs.length; i++) {
-	        sumPos+=Math.abs(diffs[i][1]);
+	    for (var i=0; i<diffs[1].length; i++) {
+	        sumPos+=Math.abs(diffs[1][i]);
 	    }
 	    return 1-sumPos;
 	}
@@ -2060,146 +2088,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var Stat=__webpack_require__(8);
+	exports.array = __webpack_require__(8);
+	exports.matrix = __webpack_require__(9);
 
-	module.exports=massPeakPicking;
-
-
-	function massPeakPicking(x, y) {
-
-	// we calculate the noise
-	    var noiseLevel=Stat.array.median(y.filter(function(a) {return (a>0)}))*3;
-
-	    console.log(noiseLevel);
-
-	    return gsd(x, y, {
-	        noiseLevel: noiseLevel
-	    });
-	}
-
-	function gsd(x, y, options){
-	    options=options || {};
-	    if (options.minMaxRatio===undefined) options.minMaxRatio=0.00025;
-	    if (options.noiseLevel===undefined) options.noiseLevel=0;;
-
-	    if (options.noiseLevel>0) {
-	        y=[].concat(y);
-	        for (var i=0; i<y.length; i++){
-	            if(Math.abs(y[i])<options.noiseLevel) {
-	                y[i]=0;
-	            }
-	        }
-	    }
-
-	    // fill convolution frequency axis
-	    var X = [];//x[2:(x.length-2)];
-
-	    // fill Savitzky-Golay polynomes
-	    var size= x.length-4;
-	    var Y = new Array(size);
-	    var dY = new Array(size);
-	    var ddY = new Array(size);
-
-	    //var dx = x[1]-x[0];
-
-	    for (var j = 2; j < size+2; j++) {
-	        var dx = x[j]-x[j-1];
-	        Y[j-2]=(1/35.0)*(-3*y[j-2] + 12*y[j-1] + 17*y[j] + 12*y[j+1] - 3*y[j+2]);
-	        X[j-2]=x[j];
-	        dY[j-2]=(1/(12*dx))*(y[j-2] - 8*y[j-1] + 8*y[j+1] - y[j+2]);
-	        ddY[j-2]=(1/(7*dx*dx))*(2*y[j-2] - y[j-1] - 2*y[j] - y[j+1] + 2*y[j+2]);
-	    }
-
-	    var maxDdy=0;
-	    //console.log(Y.length);
-	    for (var i = 0; i < Y.length ; i++){
-	        if(Math.abs(ddY[i])>maxDdy){
-	            maxDdy = Math.abs(ddY[i]);
-	        }
-	    }
-	    //console.log(maxY+"x"+maxDy+"x"+maxDdy);
-	    var minddY = [];
-	    var intervals = [];
-	    var stackInt = [];
-	    for (var i = 1; i < Y.length -1 ; i++){
-	        if ((dY[i] < dY[i-1]) && (dY[i] <= dY[i+1])||
-	            (dY[i] <= dY[i-1]) && (dY[i] < dY[i+1])) {
-	            console.log(X[i])
-	            stackInt.push(X[i]);
-	        }
-
-	        if ((dY[i] >= dY[i-1]) && (dY[i] > dY[i+1])||
-	            (dY[i] > dY[i-1]) && (dY[i] >= dY[i+1])) {
-	            try{
-	                intervals.push( [X[i] , stackInt.pop()] );
-	            }
-	            catch(e){
-	                console.log("Error I don't know why "+e);
-	            }
-	        }
-
-	        if ((ddY[i] < ddY[i-1]) && (ddY[i] < ddY[i+1])) {
-	            minddY.push( [X[i], Y[i], i] );  // TODO should we change this to have 3 arrays ? Huge overhead creating arrays
-	        }
-	    }
-
-
-	    var signals = [];
-
-	    Y.sort(function(a, b){return b-a});
-
-	    for (var j = 0; j < minddY.length; j++){
-	        var f = minddY[j];
-	        var frequency = f[0];
-	        var possible = [];
-	        for (var k=0; k<intervals.length; k++){
-	            var i = intervals[k];
-	            if(Math.abs(frequency-(i[0]+i[1])/2)<Math.abs(i[0]-i[1])/2)
-	                possible.push(i);
-	        }
-	        console.log(possible);
-	        //console.log("possible "+possible.length);
-	        if (possible.length > 0)
-	            if (possible.length == 1)
-	            {
-	                var inter = possible[0];
-	                var linewidth = Math.abs(inter[1] - inter[0]);
-	                var height = f[1];
-	                console.log(height, options.minMaxRatio, Y[0]);
-	                if (Math.abs(height) > options.minMaxRatio*Y[0]) {
-	                    signals.push({
-	                        x: frequency,
-	                        y: height,
-	                        width: linewidth
-	                    })
-	                }
-	            }
-	            else
-	            {
-	                //TODO: nested peaks
-	                console.log("Nested "+possible);
-	            }
-	    }
-
-	    signals.sort(function (a, b) {
-	        return a.x - b.x;
-	    });
-
-	    return signals;
-	}
 
 /***/ },
 /* 8 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	exports.array = __webpack_require__(9);
-	exports.matrix = __webpack_require__(10);
-
-
-/***/ },
-/* 9 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -2658,11 +2552,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 10 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var arrayStat = __webpack_require__(9);
+	var arrayStat = __webpack_require__(8);
 
 	// https://github.com/accord-net/framework/blob/development/Sources/Accord.Statistics/Tools.cs
 
@@ -3181,6 +3075,239 @@ return /******/ (function(modules) { // webpackBootstrap
 	    weightedCovariance: weightedCovariance,
 	    weightedScatter: weightedScatter
 	};
+
+
+/***/ },
+/* 10 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+
+	var Similarity = __webpack_require__(6);
+
+	function SimilarityProcessor(experimental, options) {
+	    // we will copy the options to be sure ...
+	    this.options=Object.create(options || {});
+
+	    this.widthFunction=undefined;
+	    if (this.options.widthFunction) {
+	         this.widthFunction = new Function('mass', 'charge',
+	            this.options.widthFunction + ";"+
+	            "return {widthBottom: widthBottom, widthTop: widthTop};"
+	         );
+	    }
+
+	    this.similarity = new Similarity({
+	        widthTop: this.options.widthTop,
+	        widthBottom: this.options.widthBottom,
+	        common: this.options.common
+	    });
+	    this.similarity.setPeaks1(experimental);
+	}
+
+	SimilarityProcessor.prototype.process = function (spectrum, from, to) {
+
+	    if (this.widthFunction) {
+	        var width=this.widthFunction(spectrum[0][0])
+	        this.similarity.setTrapezoid(width.widthBottom, width.widthTop);
+	    }
+
+	    return this.similarity.fastSimilarity(spectrum, from, to);
+	};
+
+	module.exports = SimilarityProcessor;
+
+
+/***/ },
+/* 11 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var CC = __webpack_require__(1);
+	var SimilarityProcessor = __webpack_require__(10);
+	var Stat = __webpack_require__(7).array;
+
+	/*
+	options:
+	  * before (default : 0.5)
+	  * width (default : theoretical + 1)
+	  * common
+	  * widthBottom
+	  * widthTop
+	  * widthFunction
+	 */
+
+	function MFSimilarityProcessor(experimental, mf, options) {
+	    SimilarityProcessor.call(this, experimental, options);
+
+	    // we calculate the theoretical spectrum, normalize (sum to 1) it
+	    this.theoretical=CC.analyseMF(mf, {isotopomers:'arrayXXYY'}).arrayXXYY;
+	    var xTheoretical=this.theoretical[0];
+	    var yTheoretical=this.theoretical[1];
+	    var sumY=Stat.sum(yTheoretical);
+	    for (var i=0; i<yTheoretical.length; i++) {
+	        yTheoretical[i]/=sumY;
+	    }
+
+	    if (!this.options.before) this.options.before=0.5;
+	    if (!this.options.width) this.options.width=xTheoretical[xTheoretical.length]-xTheoretical[0]+0.5;
+	}
+
+	MFSimilarityProcessor.prototype.process = function (firstX) {
+	    if (this.widthFunction) {
+	        var width=this.widthFunction(spectrum[0][0])
+	        this.similarity.setTrapezoid(width.widthBottom, width.widthTop);
+	    }
+
+	    var xTheoretical=this.theoretical[0];
+	    var yTheoretical=this.theoretical[1];
+	    var shift=-xTheoretical[0]+firstX;
+	    for (var i=0; i<yTheoretical.length; i++) {
+	        xTheoretical[i]+=shift;
+	    }
+
+	    var from=firstX-this.options.before;
+	    var to=firstX+this.options.width;
+
+	    return this.similarity.fastSimilarity(this.theoretical, from, to);
+	};
+
+	module.exports = MFSimilarityProcessor;
+
+
+/***/ },
+/* 12 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Stat=__webpack_require__(7);
+
+	module.exports=massPeakPicking;
+
+
+	function massPeakPicking(x, y) {
+
+	// we calculate the noise
+	    var noiseLevel=Stat.array.median(y.filter(function(a) {return (a>0)}))*3;
+
+	    return gsd(x, y, {
+	        noiseLevel: noiseLevel
+	    });
+	}
+
+	function gsd(x, y, options){
+	    options=options || {};
+	    if (options.minMaxRatio===undefined) options.minMaxRatio=0.00025;
+	    if (options.noiseLevel===undefined) options.noiseLevel=0;;
+
+	    if (options.noiseLevel>0) {
+	        y=[].concat(y);
+	        for (var i=0; i<y.length; i++){
+	            if(Math.abs(y[i])<options.noiseLevel) {
+	                y[i]=0;
+	            }
+	        }
+	    }
+
+	    // fill convolution frequency axis
+	    var X = [];//x[2:(x.length-2)];
+
+	    // fill Savitzky-Golay polynomes
+	    var size= x.length-4;
+	    var Y = new Array(size);
+	    var dY = new Array(size);
+	    var ddY = new Array(size);
+
+	    //var dx = x[1]-x[0];
+
+	    for (var j = 2; j < size+2; j++) {
+	        var dx = x[j]-x[j-1];
+	        Y[j-2]=(1/35.0)*(-3*y[j-2] + 12*y[j-1] + 17*y[j] + 12*y[j+1] - 3*y[j+2]);
+	        X[j-2]=x[j];
+	        dY[j-2]=(1/(12*dx))*(y[j-2] - 8*y[j-1] + 8*y[j+1] - y[j+2]);
+	        ddY[j-2]=(1/(7*dx*dx))*(2*y[j-2] - y[j-1] - 2*y[j] - y[j+1] + 2*y[j+2]);
+	    }
+
+	    var maxDdy=0;
+	    //console.log(Y.length);
+	    for (var i = 0; i < Y.length ; i++){
+	        if(Math.abs(ddY[i])>maxDdy){
+	            maxDdy = Math.abs(ddY[i]);
+	        }
+	    }
+	    //console.log(maxY+"x"+maxDy+"x"+maxDdy);
+	    var minddY = [];
+	    var intervals = [];
+	    var stackInt = [];
+	    for (var i = 1; i < Y.length -1 ; i++){
+	        if ((dY[i] < dY[i-1]) && (dY[i] <= dY[i+1])||
+	            (dY[i] <= dY[i-1]) && (dY[i] < dY[i+1])) {
+	            //console.log(X[i])
+	            stackInt.push(X[i]);
+	        }
+
+	        if ((dY[i] >= dY[i-1]) && (dY[i] > dY[i+1])||
+	            (dY[i] > dY[i-1]) && (dY[i] >= dY[i+1])) {
+	            try{
+	                intervals.push( [X[i] , stackInt.pop()] );
+	            }
+	            catch(e){
+	                console.log("Error I don't know why "+e);
+	            }
+	        }
+
+	        if ((ddY[i] < ddY[i-1]) && (ddY[i] < ddY[i+1])) {
+	            minddY.push( [X[i], Y[i], i] );  // TODO should we change this to have 3 arrays ? Huge overhead creating arrays
+	        }
+	    }
+
+
+	    var signals = [];
+
+	    Y.sort(function(a, b){return b-a});
+
+	    for (var j = 0; j < minddY.length; j++){
+	        var f = minddY[j];
+	        var frequency = f[0];
+	        var possible = [];
+	        for (var k=0; k<intervals.length; k++){
+	            var i = intervals[k];
+	            if(Math.abs(frequency-(i[0]+i[1])/2)<Math.abs(i[0]-i[1])/2)
+	                possible.push(i);
+	        }
+	        //console.log(possible);
+	        //console.log("possible "+possible.length);
+	        if (possible.length > 0)
+	            if (possible.length == 1)
+	            {
+	                var inter = possible[0];
+	                var linewidth = Math.abs(inter[1] - inter[0]);
+	                var height = f[1];
+	                //console.log(height, options.minMaxRatio, Y[0]);
+	                if (Math.abs(height) > options.minMaxRatio*Y[0]) {
+	                    signals.push({
+	                        x: frequency,
+	                        y: height,
+	                        width: linewidth
+	                    })
+	                }
+	            }
+	            else
+	            {
+	                //TODO: nested peaks
+	                //console.log("Nested "+possible);
+	            }
+	    }
+
+	    signals.sort(function (a, b) {
+	        return a.x - b.x;
+	    });
+
+	    return signals;
+	}
 
 
 /***/ }
