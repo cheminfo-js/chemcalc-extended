@@ -4,6 +4,8 @@ var WorkerManager = require('web-worker-manager');
 
 var bestResults = require('./bestResults');
 
+module.exports = MFProcessorWorker;
+
 function MFProcessorWorker(options) {
     if (!options.url) {
         throw new Error('URL to the chemcalc extended library is needed');
