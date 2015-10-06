@@ -27,7 +27,7 @@
     "test": "mocha --require should --reporter mocha-better-spec-reporter --recursive",
     "test-cov": "istanbul cover node_modules/.bin/_mocha -- --require should --reporter dot --recursive",
     "test-travis": "istanbul cover node_modules/.bin/_mocha --report lcovonly -- --require should --reporter dot --recursive",
-    "build": "cheminfo build"
+    "build": "cheminfo build --no-uglify"
   },
   "devDependencies": {
     "cheminfo-tools": "^1.0.4",
