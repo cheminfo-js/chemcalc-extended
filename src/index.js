@@ -1,13 +1,17 @@
 'use strict';
 
-
 var CC = require('chemcalc');
 var PEP = require('peptide');
-var MfProcessor = exports.MfProcessor = require('./MfProcessor');
+
+var bestResults = exports.bestResults = require('./bestResults');
+var MFProcessor = exports.MFProcessor = require('./MFProcessor');
 exports.SimilarityProcessor = require('./SimilarityProcessor');
 exports.MFSimilarityProcessor = require('./MFSimilarityProcessor');
-
 var massPeakPicking = require('./massPeakPicking');
+
+if (typeof self !== 'undefined') {
+    exports.MFProcessorWorker = require('./MFProcessorWorker');
+}
 
 var CE = exports;
 
@@ -31,7 +35,7 @@ CE.mfFromMonoisotopicMass = CC.mfFromMonoisotopicMass;
 CE.mfFromMonoisotopicMassSimilarity = function (mass, experimental, options) {
     var mfResults = CC.mfFromMonoisotopicMass(mass, options);
 
-    var processor = new MfProcessor(experimental, options);
+    var processor = new MFProcessor(experimental, options);
 
 
     var results = mfResults.results;
@@ -50,7 +54,7 @@ CE.matchMFs = function (mfsArray, experimental, options) {
     options.maxResults = options.maxResults || 500;
     options.minSimilarity = (isNaN(options.minSimilarity)) ? 50 : options.minSimilarity;
 
-    var processor = new MfProcessor(experimental, options);
+    var processor = new MFProcessor(experimental, options);
     var mfs = CE.combineMFs(mfsArray);
 
     var results = [];
@@ -59,54 +63,12 @@ CE.matchMFs = function (mfsArray, experimental, options) {
         results.push(result);
         result.parts = mfs[i];
         if (results.length > options.maxResults * 2) {
-            results = CE.bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
+            results = bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
         }
     }
-    results = CE.bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
+    results = bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
     return {options: options, results: results};
 };
-
-/* we have 2 criteria to find the best results
- 1. best match per zone based on the bestOf parameter
- 2. maxResults : maximal number of results
- */
-CE.bestResults = function (results, bestOf, maxResults, minSimilarity) {
-    var newResults = [];
-
-    // in order to find the bestOf we will sort by similarity and take all of them for which there is nothing in a range
-    // of the bestOf range
-
-    results.sort(function (a, b) {
-        return b.similarity - a.similarity;
-    });
-
-    if (minSimilarity) {
-        for (var i = 0; i < results.length; i++) {
-            if (results[i].similarity < minSimilarity) {
-                results = results.slice(0, i);
-                break;
-            }
-        }
-    }
-
-    if (bestOf) {
-        for (var i = 0; i < results.length && newResults.length < maxResults; i++) {
-            for (var j = 0; j < newResults.length; j++) {
-                if (Math.abs(newResults[j].msem - results[i].msem) < (bestOf / (results[i].charge || 1))) {
-                    break;
-                }
-            }
-            if (j == newResults.length) {
-                newResults.push(results[i]);
-            }
-        }
-    } else {
-        newResults = results.slice(0, maxResults);
-    }
-
-    return newResults;
-};
-
 
 CE.getEutrophicationPotential = function (mf) {
     var chemcalc = CC.analyseMF(mf);
@@ -222,4 +184,3 @@ CE.combineMFs = function (keys) {
 
 
 CE.massPeakPicking = massPeakPicking;
-

@@ -3,7 +3,7 @@
 var CC = require('chemcalc');
 var Similarity = require('peaks-similarity');
 
-function MfProcessor(experimental, options) {
+function MFProcessor(experimental, options) {
     // we will copy the options to be sure ...
     this.options=Object.create(options || {});
     this.options.isotopomers = 'arrayXXYY';
@@ -33,7 +33,7 @@ function MfProcessor(experimental, options) {
     this.similarity.setPeaks1(experimental);
 }
 
-MfProcessor.prototype.process = function (mf, result) {
+MFProcessor.prototype.process = function (mf, result) {
     // we allow to add information on an existing result
     result = result || {};
     var ccResult = CC.analyseMF(mf, this.options);
@@ -84,4 +84,4 @@ MfProcessor.prototype.process = function (mf, result) {
     return result;
 };
 
-module.exports = MfProcessor;
+module.exports = MFProcessor;
