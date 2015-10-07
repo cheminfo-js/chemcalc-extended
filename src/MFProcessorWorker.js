@@ -27,16 +27,20 @@ MFProcessorWorker.prototype.init = function (experimental, calculationOptions) {
     return this.manager.postAll('init', [experimental, calculationOptions]);
 };
 
-MFProcessorWorker.prototype.process = function (mfs, options) {
+MFProcessorWorker.prototype.process = function (mfs, experimental, options) {
     if (!Array.isArray(mfs)) {
         throw new TypeError('mfs must be an array');
+    }
+    if (!Array.isArray(experimental)) {
+        options = experimental;
+        experimental = null;
     }
     options = options || {};
     var onStep = options.onStep || Function.prototype;
     var onError = options.onError || Function.prototype;
     var prom;
-    if (options.experimental) {
-        prom = this.init(options.experimental, options);
+    if (experimental) {
+        prom = this.init(experimental, options);
     } else {
         prom = Promise.resolve();
     }
