@@ -56,14 +56,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-
 	var CC = __webpack_require__(1);
 	var PEP = __webpack_require__(2);
-	var MfProcessor = exports.MfProcessor = __webpack_require__(5);
-	exports.SimilarityProcessor = __webpack_require__(10);
-	exports.MFSimilarityProcessor = __webpack_require__(11);
 
-	var massPeakPicking = __webpack_require__(12);
+	var bestResults = exports.bestResults = __webpack_require__(5);
+	var MFProcessor = exports.MFProcessor = __webpack_require__(6);
+	exports.SimilarityProcessor = __webpack_require__(11);
+	exports.MFSimilarityProcessor = __webpack_require__(12);
+	var massPeakPicking = __webpack_require__(13);
+
+	if (typeof self !== 'undefined') {
+	    exports.MFProcessorWorker = __webpack_require__(14);
+	}
 
 	var CE = exports;
 
@@ -87,7 +91,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	CE.mfFromMonoisotopicMassSimilarity = function (mass, experimental, options) {
 	    var mfResults = CC.mfFromMonoisotopicMass(mass, options);
 
-	    var processor = new MfProcessor(experimental, options);
+	    var processor = new MFProcessor(experimental, options);
 
 
 	    var results = mfResults.results;
@@ -106,7 +110,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    options.maxResults = options.maxResults || 500;
 	    options.minSimilarity = (isNaN(options.minSimilarity)) ? 50 : options.minSimilarity;
 
-	    var processor = new MfProcessor(experimental, options);
+	    var processor = new MFProcessor(experimental, options);
 	    var mfs = CE.combineMFs(mfsArray);
 
 	    var results = [];
@@ -115,54 +119,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        results.push(result);
 	        result.parts = mfs[i];
 	        if (results.length > options.maxResults * 2) {
-	            results = CE.bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
+	            results = bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
 	        }
 	    }
-	    results = CE.bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
+	    results = bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
 	    return {options: options, results: results};
 	};
-
-	/* we have 2 criteria to find the best results
-	 1. best match per zone based on the bestOf parameter
-	 2. maxResults : maximal number of results
-	 */
-	CE.bestResults = function (results, bestOf, maxResults, minSimilarity) {
-	    var newResults = [];
-
-	    // in order to find the bestOf we will sort by similarity and take all of them for which there is nothing in a range
-	    // of the bestOf range
-
-	    results.sort(function (a, b) {
-	        return b.similarity - a.similarity;
-	    });
-
-	    if (minSimilarity) {
-	        for (var i = 0; i < results.length; i++) {
-	            if (results[i].similarity < minSimilarity) {
-	                results = results.slice(0, i);
-	                break;
-	            }
-	        }
-	    }
-
-	    if (bestOf) {
-	        for (var i = 0; i < results.length && newResults.length < maxResults; i++) {
-	            for (var j = 0; j < newResults.length; j++) {
-	                if (Math.abs(newResults[j].msem - results[i].msem) < (bestOf / (results[i].charge || 1))) {
-	                    break;
-	                }
-	            }
-	            if (j == newResults.length) {
-	                newResults.push(results[i]);
-	            }
-	        }
-	    } else {
-	        newResults = results.slice(0, maxResults);
-	    }
-
-	    return newResults;
-	};
-
 
 	CE.getEutrophicationPotential = function (mf) {
 	    var chemcalc = CC.analyseMF(mf);
@@ -278,7 +240,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	CE.massPeakPicking = massPeakPicking;
-
 
 
 /***/ },
@@ -1533,14 +1494,64 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 5 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	module.exports = bestResults;
+
+	/* we have 2 criteria to find the best results
+	 1. best match per zone based on the bestOf parameter
+	 2. maxResults : maximal number of results
+	 */
+	function bestResults(results, bestOf, maxResults, minSimilarity) {
+	    var newResults = [];
+
+	    // in order to find the bestOf we will sort by similarity and take all of them for which there is nothing in a range
+	    // of the bestOf range
+
+	    results.sort(function (a, b) {
+	        return b.similarity - a.similarity;
+	    });
+
+	    if (minSimilarity) {
+	        for (var i = 0; i < results.length; i++) {
+	            if (results[i].similarity < minSimilarity) {
+	                results = results.slice(0, i);
+	                break;
+	            }
+	        }
+	    }
+
+	    if (bestOf) {
+	        for (var i = 0; i < results.length && newResults.length < maxResults; i++) {
+	            for (var j = 0; j < newResults.length; j++) {
+	                if (Math.abs(newResults[j].msem - results[i].msem) < (bestOf / (results[i].charge || 1))) {
+	                    break;
+	                }
+	            }
+	            if (j == newResults.length) {
+	                newResults.push(results[i]);
+	            }
+	        }
+	    } else {
+	        newResults = results.slice(0, maxResults);
+	    }
+
+	    return newResults;
+	};
+
+
+/***/ },
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var CC = __webpack_require__(1);
-	var Similarity = __webpack_require__(6);
+	var Similarity = __webpack_require__(7);
 
-	function MfProcessor(experimental, options) {
+	function MFProcessor(experimental, options) {
 	    // we will copy the options to be sure ...
 	    this.options=Object.create(options || {});
 	    this.options.isotopomers = 'arrayXXYY';
@@ -1570,7 +1581,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.similarity.setPeaks1(experimental);
 	}
 
-	MfProcessor.prototype.process = function (mf, result) {
+	MFProcessor.prototype.process = function (mf, result) {
 	    // we allow to add information on an existing result
 	    result = result || {};
 	    var ccResult = CC.analyseMF(mf, this.options);
@@ -1621,11 +1632,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return result;
 	};
 
-	module.exports = MfProcessor;
+	module.exports = MFProcessor;
 
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1635,7 +1646,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var COMMON_SECOND=2;
 	var COMMON_BOTH=3; // should be a binary operation !
 
-	var Stat = __webpack_require__(7).array;
+	var Stat = __webpack_require__(8).array;
 
 
 	module.exports = function Comparator(options) {
@@ -2083,17 +2094,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	exports.array = __webpack_require__(8);
-	exports.matrix = __webpack_require__(9);
+	exports.array = __webpack_require__(9);
+	exports.matrix = __webpack_require__(10);
 
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -2552,11 +2563,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var arrayStat = __webpack_require__(8);
+	var arrayStat = __webpack_require__(9);
 
 	// https://github.com/accord-net/framework/blob/development/Sources/Accord.Statistics/Tools.cs
 
@@ -3078,13 +3089,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 
-	var Similarity = __webpack_require__(6);
+	var Similarity = __webpack_require__(7);
 
 	function SimilarityProcessor(experimental, options) {
 	    // we will copy the options to be sure ...
@@ -3120,14 +3131,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var CC = __webpack_require__(1);
-	var SimilarityProcessor = __webpack_require__(10);
-	var Stat = __webpack_require__(7).array;
+	var SimilarityProcessor = __webpack_require__(11);
+	var Stat = __webpack_require__(8).array;
 
 	/*
 	options:
@@ -3178,12 +3189,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Stat=__webpack_require__(7);
+	var Stat=__webpack_require__(8);
 
 	module.exports=massPeakPicking;
 
@@ -3308,6 +3319,321 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    return signals;
 	}
+
+
+/***/ },
+/* 14 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var WorkerManager = __webpack_require__(15);
+
+	var bestResults = __webpack_require__(5);
+
+	module.exports = MFProcessorWorker;
+
+	function MFProcessorWorker(options) {
+	    if (!options.url) {
+	        throw new Error('URL to the chemcalc extended library is needed');
+	    }
+	    options.deps = [options.url];
+	    this.options = options;
+	    this.manager = null;
+	    this.hasExperimental = false;
+	    this._init();
+	}
+
+	MFProcessorWorker.prototype._init = function () {
+	    this.hasExperimental = false;
+	    this.manager = new WorkerManager(insideMFProcessor, this.options);
+	};
+
+	MFProcessorWorker.prototype.init = function (experimental, calculationOptions) {
+	    this.hasExperimental = true;
+	    return this.manager.postAll('init', [experimental, calculationOptions]);
+	};
+
+	MFProcessorWorker.prototype.process = function (mfs, experimental, options) {
+	    if (!Array.isArray(mfs)) {
+	        throw new TypeError('mfs must be an array');
+	    }
+	    if (!Array.isArray(experimental)) {
+	        options = experimental;
+	        experimental = null;
+	    }
+	    options = options || {};
+	    var onStep = options.onStep || Function.prototype;
+	    var onError = options.onError || Function.prototype;
+	    var prom;
+	    if (experimental) {
+	        prom = this.init(experimental, options);
+	    } else {
+	        prom = Promise.resolve();
+	    }
+	    var self = this;
+	    return prom.then(function () {
+	        return new Promise(function (resolve, reject) {
+	            var processed = 0;
+	            var total = mfs.length;
+	            var results = [];
+	            mfs.forEach(function (mf) {
+	                self.manager.post('data', [mf.mf]).then(
+	                    function (result) {
+	                        result.parts = mf;
+	                        results.push(result);
+	                        if (results.length > options.maxResults * 2) {
+	                            results = bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
+	                        }
+
+	                    },
+	                    onError
+	                ).then(function () {
+	                    processed++;
+	                    onStep(processed, total);
+	                    if (processed === total) {
+	                        results = bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
+	                        results=results.map(function(a) {
+	                            var ppm=((a.msem-options.mass)/(a.msem))*1e6;
+	                            a.ppm=Math.round(ppm*100)/100;
+	                            a.absppm=Math.abs(a.ppm*100)/100;
+	                            return a;
+	                        });
+	                        resolve(results);
+	                    }
+	                });
+	            });
+	        });
+	    });
+	};
+
+	MFProcessorWorker.prototype.reset = function () {
+	    this.manager.terminate();
+	    this._init();
+	};
+
+	function insideMFProcessor() {
+	    var processor;
+	    worker.on('init', function(send, exp, options) {
+	        processor = new chemcalcExtended.MFProcessor(exp, options);
+	        send(true);
+	    });
+	    worker.on('data', function(send, data){
+	        send(processor.process(data));
+	    });
+	}
+
+
+/***/ },
+/* 15 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var workerTemplate = __webpack_require__(16);
+
+	var CORES = navigator.hardwareConcurrency || 1;
+
+	var noop = Function.prototype;
+
+	function WorkerManager(func, options) {
+	    // Check arguments
+	    if (typeof func !== 'string' && typeof func !== 'function')
+	        throw new TypeError('func argument must be a function');
+	    if (options === undefined)
+	        options = {};
+	    if (typeof options !== 'object' || options === null)
+	        throw new TypeError('options argument must be an object');
+
+	    this._workerCode = func.toString();
+
+	    // Parse options
+	    this._numWorkers = (options.maxWorkers > 0) ? Math.min(options.maxWorkers, CORES) : CORES;
+	    this._workers = new Map();
+	    this._timeout = options.timeout || 0;
+	    this._terminateOnError = !!options.terminateOnError;
+
+	    var deps = options.deps;
+	    if (typeof deps === 'string')
+	        deps = [deps];
+	    if (!Array.isArray(deps))
+	        deps = undefined;
+
+	    this._id = 0;
+	    this._terminated = false;
+	    this._working = 0;
+	    this._waiting = [];
+
+	    this._init(deps);
+	}
+
+	WorkerManager.prototype._init = function (deps) {
+	    var workerURL = workerTemplate.newWorkerURL(this._workerCode, deps);
+
+	    for (var i = 0; i < this._numWorkers; i++) {
+	        var worker = new Worker(workerURL);
+	        worker.onmessage = this._onmessage.bind(this, worker);
+	        worker.onerror = this._onerror.bind(this, worker);
+	        worker.running = false;
+	        worker.id = i;
+	        this._workers.set(worker, null);
+	    }
+
+	    URL.revokeObjectURL(workerURL);
+	};
+
+	WorkerManager.prototype._onerror = function (worker, error) {
+	    if (this._terminated)
+	        return;
+	    this._working--;
+	    worker.running = false;
+	    var callback = this._workers.get(worker);
+	    if (callback) {
+	        callback[1](error.message);
+	    }
+	    this._workers.set(worker, null);
+	    if (this._terminateOnError) {
+	        this.terminate();
+	    } else {
+	        this._exec();
+	    }
+	};
+
+	WorkerManager.prototype._onmessage = function (worker, event) {
+	    if (this._terminated)
+	        return;
+	    this._working--;
+	    worker.running = false;
+	    var callback = this._workers.get(worker);
+	    if (callback) {
+	        callback[0](event.data.data);
+	    }
+	    this._workers.set(worker, null);
+	    this._exec();
+	};
+
+	WorkerManager.prototype._exec = function () {
+	    for (var worker of this._workers.keys()) {
+	        if (this._working === this._numWorkers ||
+	            this._waiting.length === 0) {
+	            return;
+	        }
+	        if (!worker.running) {
+	            for (var i = 0; i < this._waiting.length; i++) {
+	                var execInfo = this._waiting[i];
+	                if (typeof execInfo[3] === 'number' && execInfo[3] !== worker.id) {
+	                    // this message is intended to another worker, let's ignore it
+	                    continue;
+	                }
+	                this._waiting.splice(i, 1);
+	                worker.postMessage({
+	                    action: 'exec',
+	                    event: execInfo[0],
+	                    args: execInfo[1]
+	                });
+	                worker.running = true;
+	                worker.time = Date.now();
+	                this._workers.set(worker, execInfo[2]);
+	                this._working++;
+	                break;
+	            }
+	        }
+	    }
+	};
+
+	WorkerManager.prototype.terminate = function () {
+	    if (this._terminated) return;
+	    for (var entry of this._workers) {
+	        entry[0].terminate();
+	        if (entry[1]) {
+	            entry[1][1](new Error('Terminated'));
+	        }
+	    }
+	    this._workers.clear();
+	    this._waiting = [];
+	    this._working = 0;
+	    this._terminated = true;
+	};
+
+	WorkerManager.prototype.postAll = function (event, args) {
+	    if (this._terminated)
+	        throw new Error('Cannot post (terminated)');
+	    var promises = [];
+	    for (var worker of this._workers.keys()) {
+	        promises.push(this.post(event, args, worker.id));
+	    }
+	    return Promise.all(promises);
+	};
+
+	WorkerManager.prototype.post = function (event, args, id) {
+	    if (args === undefined) args = [];
+	    if (!Array.isArray(args)) {
+	        args = [args];
+	    }
+
+	    var self = this;
+	    return new Promise(function (resolve, reject) {
+	        if (self._terminated) throw new Error('Cannot post (terminated)');
+	        self._waiting.push([event, args, [resolve, reject], id]);
+	        self._exec();
+	    });
+	};
+
+	module.exports = WorkerManager;
+
+
+/***/ },
+/* 16 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	var worker = function () {
+	    var window = self.window = self;
+	    function ManagedWorker() {
+	        this._listeners = {};
+	    }
+	    ManagedWorker.prototype.on = function (event, callback) {
+	        if (this._listeners[event])
+	            throw new RangeError('there is already a listener for ' + event);
+	        if (typeof callback !== 'function')
+	            throw new TypeError('callback argument must be a function');
+	        this._listeners[event] = callback;
+	    };
+	    ManagedWorker.prototype._send = function (id, data) {
+	        self.postMessage({
+	            id: id,
+	            data: data
+	        });
+	    };
+	    ManagedWorker.prototype._trigger = function (event, args) {
+	        if (!this._listeners[event])
+	            throw new Error('event ' + event + ' is not defined');
+	        this._listeners[event].apply(null, args);
+	    };
+	    var worker = new ManagedWorker();
+	    self.onmessage = function (event) {
+	        switch(event.data.action) {
+	            case 'exec':
+	                event.data.args.unshift(function (data) {
+	                    worker._send(event.data.id, data);
+	                });
+	                worker._trigger(event.data.event, event.data.args);
+	                break;
+	            case 'ping':
+	                worker.send(event.data.id, 'pong');
+	                break;
+	        }
+	    };
+	    (("CODE"))
+	};
+
+	var workerStr = worker.toString().split('(("CODE"))');
+
+	exports.newWorkerURL = function newWorkerURL(code, deps) {
+	    var blob = new Blob(['(', workerStr[0], 'importScripts.apply(self, ' + JSON.stringify(deps) + ');\n', '(', code, ')();', workerStr[1], ')();'], {type: 'application/javascript'});
+	    return URL.createObjectURL(blob);
+	};
 
 
 /***/ }
