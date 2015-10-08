@@ -37,7 +37,7 @@
     "should": "^7.0.2"
   },
   "dependencies": {
-    "chemcalc": "^3.0.1",
+    "chemcalc": "^3.0.6",
     "ml-stat": "^1.0.1",
     "peaks-similarity": "^2.0.1",
     "peptide": "^0.0.1",

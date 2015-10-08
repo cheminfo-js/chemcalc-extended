@@ -5,6 +5,9 @@ var SimilarityProcessor = require('./SimilarityProcessor');
 var Stat = require('ml-stat').array;
 
 /*
+
+// We are looking for a specific pattern in an experimental spectrum
+
 options:
   * before (default : 0.5)
   * width (default : theoretical + 1)

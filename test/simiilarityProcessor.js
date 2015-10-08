@@ -19,7 +19,7 @@ function shiftArray(array, shift) {
 
 
 
-describe.only('chemcalc-extended matchMFs - check the common parameter', function () {
+describe('chemcalc-extended matchMFs - check the common parameter', function () {
 
 
     var theoretical=CE.analyseMF("C", {isotopomers:'arrayXXYY'}).arrayXXYY;;

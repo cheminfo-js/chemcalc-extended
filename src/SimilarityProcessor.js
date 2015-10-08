@@ -1,6 +1,11 @@
 'use strict';
 
 
+/*
+  We calculate the similarity between an experimental spectrum and a specific XY
+ */
+
+
 var Similarity = require('peaks-similarity');
 
 function SimilarityProcessor(experimental, options) {

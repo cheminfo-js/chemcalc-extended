@@ -34,14 +34,12 @@ CE.mfFromMonoisotopicMass = CC.mfFromMonoisotopicMass;
  */
 CE.mfFromMonoisotopicMassSimilarity = function (mass, experimental, options) {
     var mfResults = CC.mfFromMonoisotopicMass(mass, options);
-
     var processor = new MFProcessor(experimental, options);
-
 
     var results = mfResults.results;
     for (var i = 0; i < results.length; i++) {
         var result = results[i];
-        processor.process(result.mf.value, result);
+        processor.process(result.mf.value || result.mf, result);
     }
     mfResults.extractExperimental = processor.similarity.getExtract1();
     return mfResults;
