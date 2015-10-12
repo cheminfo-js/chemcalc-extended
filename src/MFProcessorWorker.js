@@ -24,8 +24,8 @@ MFProcessorWorker.prototype._init = function () {
 
 MFProcessorWorker.prototype.callbacks = function (options) {
     options = options || {};
-    var onStep = options.onStep || Function.prototype;
-    var onError = options.onError || Function.prototype;
+    this.onStep = options.onStep || Function.prototype;
+    this.onError = options.onError || Function.prototype;
 };
 
 MFProcessorWorker.prototype.init = function (experimental, calculationOptions) {
@@ -63,10 +63,10 @@ MFProcessorWorker.prototype.process = function (mfs, experimental, calculationOp
                         }
 
                     },
-                    onError
+                    this.onError
                 ).then(function () {
                     processed++;
-                    onStep(processed, total);
+                    this.onStep(processed, total);
                     if (processed === total) {
                         results = bestResults(results, calculationOptions.bestOf, calculationOptions.maxResults, calculationOptions.minSimilarity);
                         results=results.map(function(a) {
