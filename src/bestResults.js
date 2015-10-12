@@ -26,7 +26,7 @@ function bestResults(results, bestOf, maxResults, minSimilarity) {
     }
 
     if (bestOf) {
-        for (var i = 0; i < results.length && newResults.length < maxResults; i++) {
+        for (var i = 0; i < results.length; i++) {
             for (var j = 0; j < newResults.length; j++) {
                 if (Math.abs(newResults[j].msem - results[i].msem) < (bestOf / (results[i].charge || 1))) {
                     break;
@@ -37,7 +37,11 @@ function bestResults(results, bestOf, maxResults, minSimilarity) {
             }
         }
     } else {
-        newResults = results.slice(0, maxResults);
+        newResults=results.slice(0);
+    }
+
+    if (maxResults) {
+        newResults = newResults.slice(0, maxResults);
     }
 
     return newResults;
