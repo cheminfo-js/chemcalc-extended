@@ -39,7 +39,7 @@ MFProcessorWorker.prototype.process = function (mfs, experimental, calculationOp
     }
     if (!Array.isArray(experimental)) {
         calculationOptions = experimental;
- //       experimental = null;
+        experimental = null;
     }
     var promise;
     if (experimental) {
