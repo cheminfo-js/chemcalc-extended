@@ -63,10 +63,10 @@ MFProcessorWorker.prototype.process = function (mfs, experimental, calculationOp
                         }
 
                     },
-                    this.onError
+                    self.onError
                 ).then(function () {
                     processed++;
-                    this.onStep(processed, total);
+                    self.onStep(processed, total);
                     if (processed === total) {
                         results = bestResults(results, calculationOptions.bestOf, calculationOptions.maxResults, calculationOptions.minSimilarity);
                         results=results.map(function(a) {
