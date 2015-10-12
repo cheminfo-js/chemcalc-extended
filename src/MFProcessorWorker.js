@@ -22,30 +22,33 @@ MFProcessorWorker.prototype._init = function () {
     this.manager = new WorkerManager(insideMFProcessor, this.options);
 };
 
+MFProcessorWorker.prototype.callbacks = function (options) {
+    options = options || {};
+    var onStep = options.onStep || Function.prototype;
+    var onError = options.onError || Function.prototype;
+};
+
 MFProcessorWorker.prototype.init = function (experimental, calculationOptions) {
     this.hasExperimental = true;
     return this.manager.postAll('init', [experimental, calculationOptions]);
 };
 
-MFProcessorWorker.prototype.process = function (mfs, experimental, options) {
+MFProcessorWorker.prototype.process = function (mfs, experimental, calculationOptions) {
     if (!Array.isArray(mfs)) {
         throw new TypeError('mfs must be an array');
     }
     if (!Array.isArray(experimental)) {
-        options = experimental;
-        experimental = null;
+        calculationOptions = experimental;
+ //       experimental = null;
     }
-    options = options || {};
-    var onStep = options.onStep || Function.prototype;
-    var onError = options.onError || Function.prototype;
-    var prom;
+    var promise;
     if (experimental) {
-        prom = this.init(experimental, options);
+        promise = this.init(experimental, calculationOptions);
     } else {
-        prom = Promise.resolve();
+        promise = Promise.resolve();
     }
     var self = this;
-    return prom.then(function () {
+    return promise.then(function () {
         return new Promise(function (resolve, reject) {
             var processed = 0;
             var total = mfs.length;
@@ -55,8 +58,8 @@ MFProcessorWorker.prototype.process = function (mfs, experimental, options) {
                     function (result) {
                         result.parts = mf;
                         results.push(result);
-                        if (results.length > options.maxResults * 2) {
-                            results = bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
+                        if (results.length > calculationOptions.maxResults * 2) {
+                            results = bestResults(results, calculationOptions.bestOf, calculationOptions.maxResults, calculationOptions.minSimilarity);
                         }
 
                     },
@@ -65,9 +68,9 @@ MFProcessorWorker.prototype.process = function (mfs, experimental, options) {
                     processed++;
                     onStep(processed, total);
                     if (processed === total) {
-                        results = bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
+                        results = bestResults(results, calculationOptions.bestOf, calculationOptions.maxResults, calculationOptions.minSimilarity);
                         results=results.map(function(a) {
-                            var ppm=((a.msem-options.mass)/(a.msem))*1e6;
+                            var ppm=((a.msem-calculationOptions.mass)/(a.msem))*1e6;
                             a.ppm=Math.round(ppm*100)/100;
                             a.absppm=Math.abs(a.ppm*100)/100;
                             return a;
