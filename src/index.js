@@ -42,6 +42,8 @@ CE.mfFromMonoisotopicMassSimilarity = function (mass, experimental, options) {
         processor.process(result.mf.value || result.mf, result);
     }
     mfResults.extractExperimental = processor.similarity.getExtract1();
+
+    mfResults.results = bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
     return mfResults;
 };
 

@@ -31,9 +31,10 @@ describe('chemcalc-extended test', function () {
     it('Check results', function () {
         result.results.length.should.equal(10);
         result.numberResults.should.equal(79);
-        result.results[0].error.should.equal(0.0012559739);
-        result.results[0].ppm.should.equal( 5.7851);
-        result.results[0].em.should.equal(217.10626);
+        result.results[0].mf.value.should.equal("C4H11N9O2")
+        result.results[0].error.should.equal(-0.0014293644);
+        result.results[0].ppm.should.equal(-6.5838);
+        result.results[0].em.should.equal(217.10357);
     });
 });
 

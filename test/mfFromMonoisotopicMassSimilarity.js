@@ -15,8 +15,6 @@ describe('Check mfFromMonoisotopicMassSimilarity', function () {
         widthBottom: 0.10,
         common: false,
         mfRange: 'C0-50 H0-100 O0-10 N0-10 '+mf,
-        from: 0.5,
-        to: 5.5,
         minUnsaturation: 0,
         maxUnsaturation: 20,
         useUnsaturation: true,
@@ -31,9 +29,10 @@ describe('Check mfFromMonoisotopicMassSimilarity', function () {
     );
 
     it('Check results element 0', function () {
-        result.results.length.should.equal(29);
-        result.results[0].similarity.should.equal(100);
+        result.results.length.should.equal(12);
+        result.results[0].similarity.should.equal(99.99);
         result.results[0].mf.should.equal('C10H12Br2');
+        console.log(result.results[0])
     });
 
 });
