@@ -48,6 +48,7 @@ CE.mfFromMonoisotopicMassSimilarity = function (mass, experimental, options) {
 };
 
 
+
 CE.matchMFs = function (mfsArray, experimental, options) {
     options = options || {};
     options.addExperimentalExtract = true;
@@ -154,7 +155,12 @@ CE.combineMFs = function (keys) {
     }
 
     if (!Array.isArray(keys)) return [];
-    if (!Array.isArray(keys[0])) keys = [keys];
+    for (var i=0; i<keys.length; i++) {
+        if (! Array.isArray(keys[i])) {
+            keys[i] = keys[i].split(/[\.,;]/);
+        }
+    }
+
     var results = [];
     var sizes = new Array(keys.length);
     var currents = new Array(keys.length);

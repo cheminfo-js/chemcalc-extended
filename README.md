@@ -49,7 +49,11 @@ matchMFs(mfs, experimental, options)
 
 ### combineMFs(array)
 
-We may have array of array of string and we combine to get all the possibile MFs
+We may have array of array of string and we combine to get all the possible MFs
+
+ex:
+* combineMFs([["C","H$YY"],[],[""],["Cl","Br$XX"]])
+* combineMFs(["C.H.O","+,++",['Cl','Br$XX']])
 
 ### getEutrophicationPotential
 
