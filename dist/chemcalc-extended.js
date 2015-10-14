@@ -98,8 +98,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        processor.process(result.mf.value || result.mf, result);
 	    }
 	    mfResults.extractExperimental = processor.similarity.getExtract1();
+
+	    mfResults.results = bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
 	    return mfResults;
 	};
+
 
 
 	CE.matchMFs = function (mfsArray, experimental, options) {
@@ -208,7 +211,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    if (!Array.isArray(keys)) return [];
-	    if (!Array.isArray(keys[0])) keys = [keys];
+	    for (var i=0; i<keys.length; i++) {
+	        if (! Array.isArray(keys[i])) {
+	            keys[i] = keys[i].split(/[\.,;]/);
+	        }
+	    }
+
 	    var results = [];
 	    var sizes = new Array(keys.length);
 	    var currents = new Array(keys.length);
@@ -1522,7 +1530,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    if (bestOf) {
-	        for (var i = 0; i < results.length && newResults.length < maxResults; i++) {
+	        for (var i = 0; i < results.length; i++) {
 	            for (var j = 0; j < newResults.length; j++) {
 	                if (Math.abs(newResults[j].msem - results[i].msem) < (bestOf / (results[i].charge || 1))) {
 	                    break;
@@ -1533,7 +1541,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        }
 	    } else {
-	        newResults = results.slice(0, maxResults);
+	        newResults=results.slice(0);
+	    }
+
+	    if (maxResults) {
+	        newResults = newResults.slice(0, maxResults);
 	    }
 
 	    return newResults;
@@ -3339,75 +3351,64 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = MFProcessorWorker;
 
-	function MFProcessorWorker(options) {
-	    if (!options.url) {
-	        throw new Error('URL to the chemcalc extended library is needed');
+	function MFProcessorWorker(managerOptions) {
+	    if (!managerOptions.url) {
+	        throw new Error('URL to the chemcalc extended library is required');
 	    }
-	    options.deps = [options.url];
-	    this.options = options;
+	    managerOptions.deps = [managerOptions.url];
+	    this.managerOptions = managerOptions;
 	    this.manager = null;
-	    this.hasExperimental = false;
 	    this._init();
 	}
 
 	MFProcessorWorker.prototype._init = function () {
-	    this.hasExperimental = false;
-	    this.manager = new WorkerManager(insideMFProcessor, this.options);
+	    this.manager = new WorkerManager(insideMFProcessor, this.managerOptions);
+	};
+
+	MFProcessorWorker.prototype.callbacks = function (callBacksOptions) {
+	    callBacksOptions = callBacksOptions || {};
+	    this.onStep = callBacksOptions.onStep || Function.prototype;
+	    this.onError = callBacksOptions.onError || Function.prototype;
 	};
 
 	MFProcessorWorker.prototype.init = function (experimental, calculationOptions) {
-	    this.hasExperimental = true;
+	    this.calculationOptions=calculationOptions;
 	    return this.manager.postAll('init', [experimental, calculationOptions]);
 	};
 
-	MFProcessorWorker.prototype.process = function (mfs, experimental, options) {
+	MFProcessorWorker.prototype.process = function (mfs) {
 	    if (!Array.isArray(mfs)) {
 	        throw new TypeError('mfs must be an array');
 	    }
-	    if (!Array.isArray(experimental)) {
-	        options = experimental;
-	        experimental = null;
-	    }
-	    options = options || {};
-	    var onStep = options.onStep || Function.prototype;
-	    var onError = options.onError || Function.prototype;
-	    var prom;
-	    if (experimental) {
-	        prom = this.init(experimental, options);
-	    } else {
-	        prom = Promise.resolve();
-	    }
 	    var self = this;
-	    return prom.then(function () {
-	        return new Promise(function (resolve, reject) {
-	            var processed = 0;
-	            var total = mfs.length;
-	            var results = [];
-	            mfs.forEach(function (mf) {
-	                self.manager.post('data', [mf.mf]).then(
-	                    function (result) {
-	                        result.parts = mf;
-	                        results.push(result);
-	                        if (results.length > options.maxResults * 2) {
-	                            results = bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
-	                        }
-
-	                    },
-	                    onError
-	                ).then(function () {
-	                    processed++;
-	                    onStep(processed, total);
-	                    if (processed === total) {
-	                        results = bestResults(results, options.bestOf, options.maxResults, options.minSimilarity);
-	                        results=results.map(function(a) {
-	                            var ppm=((a.msem-options.mass)/(a.msem))*1e6;
-	                            a.ppm=Math.round(ppm*100)/100;
-	                            a.absppm=Math.abs(a.ppm*100)/100;
-	                            return a;
-	                        });
-	                        resolve(results);
+	    return new Promise(function (resolve, reject) {
+	        var processed = 0;
+	        var total = mfs.length;
+	        var results = [];
+	        mfs.forEach(function (mf) {
+	            self.manager.post('data', [mf.mf]).then(
+	                function (result) {
+	                    result.parts = mf;
+	                    results.push(result);
+	                    if (results.length > self.calculationOptions.maxResults * 2) {
+	                        results = bestResults(results, self.calculationOptions.bestOf, self.calculationOptions.maxResults, self.calculationOptions.minSimilarity);
 	                    }
-	                });
+
+	                },
+	                self.onError
+	            ).then(function () {
+	                processed++;
+	                self.onStep(processed, total);
+	                if (processed === total) {
+	                    results = bestResults(results, self.calculationOptions.bestOf, self.calculationOptions.maxResults, self.calculationOptions.minSimilarity);
+	                    results=results.map(function(a) {
+	                        var ppm=((a.msem-self.calculationOptions.mass)/(a.msem))*1e6;
+	                        a.ppm=Math.round(ppm*100)/100;
+	                        a.absppm=Math.abs(a.ppm*100)/100;
+	                        return a;
+	                    });
+	                    resolve(results);
+	                }
 	            });
 	        });
 	    });
