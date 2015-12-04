@@ -23,7 +23,7 @@ describe('combine MFs test', function () {
     });
 
 
-    it('From array of string with some range', function () {
+    it.only('From array of string with some range', function () {
         var mfsArray=["C1-3N0-2Cl0-0BrO1-1.C2-3H3-4",['C','O']];
         var result=CE.combineMFs(mfsArray);
         result[0].mf.should.equal('CBrOC');
