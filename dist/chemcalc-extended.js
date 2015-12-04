@@ -3045,11 +3045,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 11 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
+	var CC = __webpack_require__(1);
+
+
+	// TODO replace from the value coming from chemcalc
+	var ELECTRON_MASS=5.4857990946e-4;
+
 	function combineMFs (keys) {
+
 
 	    if (!Array.isArray(keys)) return [];
 
@@ -3106,12 +3113,57 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = combineMFs;
 
+	var ems={};
+
+	function getEM(mf) {
+	    if (! ems[mf]) {
+	        // we need to calculate based on the mf
+	        var info=CC.analyzeMF('mf');
+	        ems[mf]={
+	            em: info.em,
+	            charge: info.parts[0].charge
+	        }
+	    }
+	    return {
+	        em: ems[mf].em,
+	        charge: ems[mf].charge
+	    }
+	}
+
+	function getEMFromParts(parts, currents) {
+	    var charge=0;
+	    var em=0;
+
+	    for (var i = 0; i < parts.length; i++) {
+	        var part = parts[i][currents[i]];
+	        if (key) {
+	            var info=getEM(part);
+	            charge+=info.charge;
+	            em+=info.em;
+	        }
+	    }
+	    var msem=em;
+	    if (charge>0) {
+	        msem=msem/charge-ELECTRON_MASS;
+	    } else if (charge<0) {
+	        msem=msem/(-charge)+ELECTRON_MASS;
+	    } else {
+	        msem=0;
+	    }
+	    return {
+	        charge: charge,
+	        em: em,
+	        msem: em/charge
+	    }
+	}
+
 	function appendResult(results, currents, keys) {
 	    // this script is designed to combine molecular formula
 	    // that may contain comments after a "$" sign
 	    // therefore we should put all the comments at the ned
 	    var result = {mf: ''};
 	    var comments = [];
+
 	    for (var i = 0; i < keys.length; i++) {
 	        var key = keys[i][currents[i]];
 	        if (key) {
