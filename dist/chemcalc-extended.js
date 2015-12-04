@@ -3118,10 +3118,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	function getEM(mf) {
 	    if (! ems[mf]) {
 	        // we need to calculate based on the mf
-	        var info=CC.analyzeMF('mf');
+	        var info=CC.analyseMF(mf);
 	        ems[mf]={
 	            em: info.em,
-	            charge: info.parts[0].charge
+	            charge: info.parts[0].charge || 0
 	        }
 	    }
 	    return {
@@ -3136,7 +3136,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    for (var i = 0; i < parts.length; i++) {
 	        var part = parts[i][currents[i]];
-	        if (key) {
+	        if (part) {
 	            var info=getEM(part);
 	            charge+=info.charge;
 	            em+=info.em;
@@ -3146,14 +3146,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (charge>0) {
 	        msem=msem/charge-ELECTRON_MASS;
 	    } else if (charge<0) {
-	        msem=msem/(-charge)+ELECTRON_MASS;
+	        msem=msem/(charge*-1)+ELECTRON_MASS;
 	    } else {
 	        msem=0;
 	    }
 	    return {
 	        charge: charge,
 	        em: em,
-	        msem: em/charge
+	        msem: msem
 	    }
 	}
 
@@ -3174,6 +3174,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	            result.mf += key;
 	        }
+	        var info=getEMFromParts(keys, currents);
+	        result.em=info.em;
+	        result.msem=info.msem;
+	        result.charge=info.charge;
 	    }
 
 	    if (comments.length > 0) result.mf += '$' + comments.join(' ');
@@ -3183,12 +3187,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function processRange(string) {
 	    var results=[];
-	    var parts=string.split(/([0-9-]+)/).filter(function(value) { if (value) return value });
+	    var parts=string.split(/([0-9]+-[0-9]+)/).filter(function(value) { if (value) return value });
 	    var position=-1;
 	    var mfs=[];
 	    for (var i=0; i<parts.length; i++) {
 	        var part=parts[i];
-	        if (!~part.indexOf('-')) {
+	        if (!~part.search(/[0-9]-[0-9]/)) {
 	            position++;
 	            mfs[position]={
 	                mf:part,
@@ -3219,7 +3223,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    }
 	    results.push(getMF(mfs, currents));
-
 	    return results;
 	}
 
