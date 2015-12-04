@@ -32,7 +32,6 @@ describe('Check mfFromMonoisotopicMassSimilarity', function () {
         result.results.length.should.equal(12);
         result.results[0].similarity.should.equal(99.99);
         result.results[0].mf.should.equal('C10H12Br2');
-        console.log(result.results[0])
     });
 
 });

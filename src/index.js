@@ -5,6 +5,8 @@ var PEP = require('peptide');
 
 var bestResults = exports.bestResults = require('./bestResults');
 var MFProcessor = exports.MFProcessor = require('./MFProcessor');
+
+exports.combineMFs = require('./combineMFs');
 exports.SimilarityProcessor = require('./SimilarityProcessor');
 exports.MFSimilarityProcessor = require('./MFSimilarityProcessor');
 var massPeakPicking = require('./massPeakPicking');
@@ -130,63 +132,6 @@ CE.generatePeptideFragments = function (sequence, options) {
     return PEP.generatePeptideFragments(sequence, options);
 }
 
-CE.combineMFs = function (keys) {
-    function appendResult(results, currents, keys) {
-        // this script is designed to combine molecular formula
-        // that may contain comments after a "$" sign
-        // therefore we should put all the comments at the ned
-        var result = {mf: ''};
-        var comments = [];
-        for (var i = 0; i < keys.length; i++) {
-            var key = keys[i][currents[i]];
-            if (key) {
-                result['part' + (i + 1)] = key;
-                if (key.indexOf('$') > -1) {
-                    comments.push(key.replace(/^[^$]*\$/, ''));
-                    key = key.replace(/\$.*/, '');
-                }
-                result.mf += key;
-            }
-        }
-
-        if (comments.length > 0) result.mf += '$' + comments.join(' ');
-
-        results.push(result);
-    }
-
-    if (!Array.isArray(keys)) return [];
-    for (var i=0; i<keys.length; i++) {
-        if (! Array.isArray(keys[i])) {
-            keys[i] = keys[i].split(/[\.,;]/);
-        }
-    }
-
-    var results = [];
-    var sizes = new Array(keys.length);
-    var currents = new Array(keys.length);
-    for (var i = 0; i < keys.length; i++) {
-        sizes[i] = keys[i].length - 1;
-        currents[i] = 0;
-    }
-    var position = 0;
-    var evolution = 0;
-
-    while (position < currents.length) {
-        if (currents[position] < sizes[position]) {
-            evolution++;
-            appendResult(results, currents, keys);
-            currents[position]++;
-            for (var i = 0; i < position; i++) {
-                currents[i] = 0;
-            }
-            position = 0;
-        } else {
-            position++;
-        }
-    }
-    appendResult(results, currents, keys);
-    return results;
-};
 
 
 CE.massPeakPicking = massPeakPicking;
