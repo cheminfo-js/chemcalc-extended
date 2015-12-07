@@ -40,9 +40,9 @@ describe('combine MFs test', function () {
 
 
     it('From array of string to large array', function () {
-        var mfsArray=["C0-1000","O0-100"];
+        var mfsArray=["C0-100","O0-100"];
         var result=CE.combineMFs(mfsArray);
-        result.length.should.equal(101101);
+        result.length.should.equal(101*101);
     });
 
 
