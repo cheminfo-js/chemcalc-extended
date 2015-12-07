@@ -931,8 +931,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	var aa = __webpack_require__(3);
 	var IEP = __webpack_require__(4);
 
-	console.log(IEP);
-
 
 	exports.getInfo = function () {
 	    return aa;
@@ -955,6 +953,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 
+	exports.getColorForIEP = function (iep) {
+	    return IEP.getColor(iep);
+	}
+
+	exports.calculateCharge = function (sequence, ph) {
+	    var aas=sequence.replace(/([A-Z])/g," $1").split(/ /);
+	    aas=aas.slice(2,aas.length-2);
+	    return IEP.calculateCharge(aas, ph);
+	}
+
 	exports.generatePeptideFragments = function generatePeptideFragments(mf, options) {
 	    if (options === undefined) {
 	        options = {
@@ -964,7 +972,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            x: false,
 	            y: true,
 	            z: false,
-	            i: false
+	            i: false,
+	            yb: false,
+	            ya: false
 	        };
 	    }
 
@@ -979,7 +989,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	        addNTerm(mfs, nTerm, i, options);
 	        addCTerm(mfs, cTerm, i, options);
 	        if (options.i) mfs.push(mfparts[i]+"HC-1O-1(+1)$i:"+mfparts[i]);
+
+	        if (options.ya || options.yb) { // we have double fragmentations
+	            for (var j=i+1; j<mfparts.length;j++) {
+	                var iTerm='';
+	                for (var k=i; k<j; k++) {
+	                    iTerm+=mfparts[k];
+	                }
+	                addITerm(mfs, iTerm, i, j, options);
+	            }
+	        }
 	    }
+
 
 	    if (mfs.length === 0) {
 	        mfs = mfs.concat([mf]);
@@ -1059,6 +1080,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (options.a) mfs.push(nTerm+"C-1O-1(+1)$a"+i);
 	    if (options.b) mfs.push(nTerm+"(+1)$b"+i);
 	    if (options.c) mfs.push(nTerm+"NH3(+1)$c"+i);
+	}
+
+	function addITerm(mfs, iTerm, i, j, options) {
+	    if (options.ya) mfs.push("H"+iTerm+"C-1O-1(+1)$a"+j+"y"+i);
+	    if (options.yb) mfs.push("H"+iTerm+"(+1)$b"+j+"y"+i);
 	}
 
 	function addCTerm(mfs, cTerm, i, options) {
@@ -1335,9 +1361,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 
-	function calculateCharge(aaSequence, pH) {
+	function calculateCharge(aas, pH) {
 	    if (! pH) pH=7.0;
-	    var combined=combine(aaSequence);
+	    var combined=combine(aas);
 	    if (!combined) return;
 	    var charge=calculateForPh(combined, pH);
 	    return Math.round(charge*1000)/1000;
@@ -1399,22 +1425,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	// we will combine the amino acids
-	function combine(aaSequence) {
+	function combine(aas) {
 	    var combined={};
-	    if (aaObject[aaSequence[0]]) {
-	        combined.first=aaObject[aaSequence[0]].pKaN;
+	    if (aaObject[aas[0]]) {
+	        combined.first=aaObject[aas[0]].pKaN;
 	    } else {
 	        return;
 	    }
-	    if (aaObject[aaSequence[aaSequence.length-1]]) {
-	        combined.last=aaObject[aaSequence[aaSequence.length-1]].pKaC;
+	    if (aaObject[aas[aas.length-1]]) {
+	        combined.last=aaObject[aas[aas.length-1]].pKaC;
 	    } else {
 	        return;
 	    }
 	    combined.basic={};
 	    combined.acid={};
-	    for (var i=0; i<aaSequence.length; i++) {
-	        var aa=aaSequence[i];
+	    for (var i=0; i<aas.length; i++) {
+	        var aa=aas[i];
 	        if (! aaObject[aa]) return;
 	        if (aaObject[aa].sc && aaObject[aa].sc.type) {
 	            if (aaObject[aa].sc.type=="positive") {
@@ -1433,12 +1459,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return combined;
 	}
 
-
+	/*
+	 We can generate a color based on iep
+	 0 -> 7 means that at pH 7 it is charged negatively (blue)
+	 7 -> 14 means that at pH7 it is charged positively (red)
+	 */
+	function getColor(iep) {
+	    if (iep<7) {
+	        if (iep<3) iep=3;
+	        var white=Math.round(255-(7-iep)*(200/4));
+	        return "rgb("+white+","+white+",255)";
+	    } else if (iep>7) {
+	        if (iep>11) iep=11;
+	        var white=Math.round(255-(iep-7)*(200/4));
+	        return "rgb(255,"+white+","+white+")";
+	    }
+	    return "rgb(255,255,255)";
+	}
 
 	module.exports={
 	    calculateIEP: calculateIEP,
 	    calculateCharge: calculateCharge,
-	    calculateChart: calculateChart
+	    calculateChart: calculateChart,
+	    getColor: getColor
 	}
 
 
