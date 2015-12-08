@@ -6,8 +6,8 @@ var CC = require('chemcalc');
 // TODO replace from the value coming from chemcalc
 var ELECTRON_MASS=5.4857990946e-4;
 
-function combineMFs (keys) {
-
+function combineMFs (keys, options) {
+    var options=options || {};
 
     if (!Array.isArray(keys)) return [];
 

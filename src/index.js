@@ -123,8 +123,8 @@ CE.convertAASequence = function (sequence) {
     return PEP.convertAASequence(sequence);
 }
 
-CE.chargePeptide = function (sequence) {
-    return PEP.chargePeptide(sequence);
+CE.chargePeptide = function (sequence, options) {
+    return PEP.chargePeptide(sequence, options);
 }
 
 
