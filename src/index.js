@@ -132,6 +132,16 @@ CE.generatePeptideFragments = function (sequence, options) {
     return PEP.generatePeptideFragments(sequence, options);
 }
 
+CE.generatePeptideFragments = function (sequence, options) {
+    return PEP.generatePeptideFragments(sequence, options);
+}
 
+CE.splitPeptide = function (sequence, options) {
+    return PEP.splitPeptide(sequence, options);
+}
+
+CE.digestPeptide = function (sequence, options) {
+    return PEP.digestPeptide(sequence, options);
+}
 
 CE.massPeakPicking = massPeakPicking;
