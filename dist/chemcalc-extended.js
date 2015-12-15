@@ -977,12 +977,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	            ya: false
 	        };
 	    }
+	    options.maxInternal = options.maxInternal || Number.MAX_VALUE;
 
 	    var mfs = [];
 	    var mfparts=mf.replace(/([a-z\)])([A-Z][a-z](?=[a-z]))/g,"$1 $2").split(/ /);
 
 	    var nTerm="";
 	    var cTerm="";
+
 	    for (var i=1; i<mfparts.length; i++) {
 	        nTerm+=mfparts[i-1];
 	        cTerm=mfparts[mfparts.length-i]+cTerm;
@@ -991,12 +993,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (options.i) mfs.push(mfparts[i]+"HC-1O-1(+1)$i:"+mfparts[i]);
 
 	        if (options.ya || options.yb) { // we have double fragmentations
-	            for (var j=i+1; j<mfparts.length;j++) {
+	            for (var j=i+1; j<Math.min(mfparts.length,options.maxInternal+i+1);j++) {
 	                var iTerm='';
 	                for (var k=i; k<j; k++) {
 	                    iTerm+=mfparts[k];
 	                }
-	                addITerm(mfs, iTerm, i, j, options);
+	                addITerm(mfs, iTerm, mfparts.length-i, j, options);
 	            }
 	        }
 	    }
