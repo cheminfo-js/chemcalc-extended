@@ -1,6 +1,6 @@
 {
   "name": "chemcalc-extended",
-  "version": "1.16.0",
+  "version": "1.17.0",
   "description": "chemcalc-extended project - Extend chemcalc-js to calculate experimental spectra similarity ",
   "keywords": [
     "chemcalc-extended",
