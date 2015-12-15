@@ -1627,7 +1627,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (options.maxResidue===undefined) options.maxResidue=Number.MAX_VALUE;
 	    var regexp=getRegexp(options.enzyme);
 	    var fragments=sequence.replace(regexp,"$1 ").split(/ /);
-	    if (!fragments[fragments.length]) fragments=fragments.slice(0, fragments.length-1);
+	    if (!fragments[fragments.length-1]) fragments=fragments.slice(0, fragments.length-1);
 
 	    for (var i=0; i<fragments.length; i++) {
 	        fragments[i]={
@@ -1635,6 +1635,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            nbResidue:splitSequence(fragments[i]).length
 	        }
 	    }
+
 
 	    var results=[];
 
