@@ -45,6 +45,11 @@ describe('combine MFs test', function () {
         result.length.should.equal(101*101);
     });
 
+    it('Strange comments', function () {
+        var mfsArray=["C$1>10","O$D2>20"];
+        var result=CE.combineMFs(mfsArray);
+        result[0].mf.should.equal('CO$1>10 D2>20');
+    });
 
 });
 

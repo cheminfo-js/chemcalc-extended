@@ -26,10 +26,13 @@ function combineMFs (keys, options) {
         var newParts=[];
         for (var j=0; j<parts.length; j++) {
             var part=parts[j];
+            var comment=part.replace(/^([^$]*\$|.*)/, '');
+            part = part.replace(/\$.*/, '');
+
             if (~part.indexOf('-')) { // there are ranges ... we are in trouble !
-                newParts=newParts.concat(processRange(part));
+                newParts=newParts.concat(processRange(part,comment));
             } else {
-                newParts.push(part);
+                newParts.push(parts[j]); // the part with the comments !
             }
         }
         keys[i]=newParts;
@@ -136,7 +139,7 @@ function appendResult(results, currents, keys) {
     results.push(result);
 }
 
-function processRange(string) {
+function processRange(string, comment) {
     var results=[];
     var parts=string.split(/([0-9]+-[0-9]+)/).filter(function(value) { if (value) return value });
     var position=-1;
@@ -163,7 +166,7 @@ function processRange(string) {
     var position = 0;
     while (position < currents.length) {
         if (currents[position] < mfs[position].max) {
-            results.push(getMF(mfs, currents));
+            results.push(getMF(mfs, currents, comment));
             currents[position]++;
             for (var i = 0; i < position; i++) {
                 currents[i] = mfs[i].min;
@@ -173,11 +176,11 @@ function processRange(string) {
             position++;
         }
     }
-    results.push(getMF(mfs, currents));
+    results.push(getMF(mfs, currents, comment));
     return results;
 }
 
-function getMF(mfs, currents) {
+function getMF(mfs, currents, comment) {
     var mf="";
     for (var i=0; i<mfs.length; i++) {
         if (currents[i]!=0) {
@@ -187,6 +190,8 @@ function getMF(mfs, currents) {
             }
         }
     }
+    console.log(comment);
+    if (comment) mf+="$"+comment;
     return mf;
 }
 
