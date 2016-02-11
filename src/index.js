@@ -132,12 +132,8 @@ CE.generatePeptideFragments = function (sequence, options) {
     return PEP.generatePeptideFragments(sequence, options);
 }
 
-CE.generatePeptideFragments = function (sequence, options) {
-    return PEP.generatePeptideFragments(sequence, options);
-}
-
-CE.splitPeptide = function (sequence, options) {
-    return PEP.splitPeptide(sequence, options);
+CE.splitPeptide = function (sequence) {
+    return PEP.splitPeptide(sequence);
 }
 
 CE.digestPeptide = function (sequence, options) {

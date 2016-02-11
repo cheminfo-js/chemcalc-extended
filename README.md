@@ -90,6 +90,36 @@ __Arguments__
 * `options` - object with requested fragments. Default: `{a:false, b:true, c:false, x:false, y:true, z:false, i:false}`
 
 
+#### splitPeptide(sequence)
+
+Split a 3 letter code sequence respecting uppercase, lowercase in an array of residu.
+
+__Arguments__
+
+* `sequence` - string with the amino acids sequence
+
+
+#### digestPeptide(sequence, options)
+
+Allows to digest virtually a peptide
+
+__Arguments__
+
+* `sequence` - string with the amino acids sequence
+* `options`
+  * `minMissed` - minimal missed cleavage (default: 0)
+  * `maxMissed` - maximal missed cleavage (default: 0)
+  * `minResidue` - minimal number of residues (default: 0)
+  * `maxResidue` - maximal number of residues (default: infinity)
+  * `enzyme` - enzyme used for digestion
+    * chymotrypsin : (Phe|Tyr|Trp)(?!Pro)
+    * trypsin : (Lys|Arg)(?!Pro)
+    * lysc : (Lys)(?!Pro)
+    * glucph4 : (Glu)(?!Pro|Glu)
+    * glucph8 : (Asp|Glu)(?!Pro|Glu)
+    * thermolysin : (Leu|Ile|Met|Phe|Trp)
+    * cyanogenbromide : (Met)
+
 ## Development
 
 ### Install dev dependencies
