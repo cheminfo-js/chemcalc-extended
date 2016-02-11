@@ -1672,7 +1672,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var from=fragments[i].from;
 	            var to=fragments[i+j].to;
 	            if (fragment && nbResidue>=options.minResidue && nbResidue<=options.maxResidue) {
-	                results.push("H"+fragment+"OH"+"$D"+from+"-"+to);
+	                results.push("H"+fragment+"OH"+"$D"+from+">"+to);
 	            }
 	        }
 	    }
