@@ -1646,11 +1646,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var fragments=sequence.replace(regexp,"$1 ").split(/ /);
 	    if (!fragments[fragments.length-1]) fragments=fragments.slice(0, fragments.length-1);
 
+	    var from=0;
 	    for (var i=0; i<fragments.length; i++) {
+	        var nbResidue=splitSequence(fragments[i]).length;
 	        fragments[i]={
 	            sequence:fragments[i],
-	            nbResidue:splitSequence(fragments[i]).length
+	            nbResidue:nbResidue,
+	            from:from+1,
+	            to:from+nbResidue
 	        }
+	        from+=nbResidue;
 	    }
 
 
@@ -1662,10 +1667,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var nbResidue=0;
 	            for (var k=i; k<=(i+j); k++) {
 	                fragment+=fragments[k].sequence;
-	                nbResidue+=fragments[k].nbResidue
+	                nbResidue+=fragments[k].nbResidue;
 	            }
+	            var from=fragments[i].from;
+	            var to=fragments[i+j].to;
 	            if (fragment && nbResidue>=options.minResidue && nbResidue<=options.maxResidue) {
-	                results.push("H"+fragment+"OH");
+	                results.push("H"+fragment+"OH"+"$D"+from+"-"+to);
 	            }
 	        }
 	    }
