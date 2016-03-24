@@ -62,13 +62,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	var bestResults = exports.bestResults = __webpack_require__(9);
 	var MFProcessor = exports.MFProcessor = __webpack_require__(10);
 
-	exports.combineMFs = __webpack_require__(15);
-	exports.SimilarityProcessor = __webpack_require__(16);
-	exports.MFSimilarityProcessor = __webpack_require__(17);
-	var massPeakPicking = __webpack_require__(18);
+
+
+	exports.getContaminantsReferenceList = __webpack_require__(15);
+
+
+	exports.combineMFs = __webpack_require__(24);
+	exports.SimilarityProcessor = __webpack_require__(25);
+	exports.MFSimilarityProcessor = __webpack_require__(26);
+	var massPeakPicking = __webpack_require__(27);
 
 	if (typeof self !== 'undefined') {
-	    exports.MFProcessorWorker = __webpack_require__(19);
+	    exports.MFProcessorWorker = __webpack_require__(28);
 	}
 
 	var CE = exports;
@@ -175,26 +180,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 
-	CE.convertAASequence = function (sequence) {
-	    return PEP.convertAASequence(sequence);
-	}
+	CE.convertAASequence = PEP.convertAASequence;
 
-	CE.chargePeptide = function (sequence, options) {
-	    return PEP.chargePeptide(sequence, options);
-	}
+	CE.chargePeptide = PEP.chargePeptide;
 
+	CE.generatePeptideFragments = PEP.generatePeptideFragments;
 
-	CE.generatePeptideFragments = function (sequence, options) {
-	    return PEP.generatePeptideFragments(sequence, options);
-	}
+	CE.splitPeptide = PEP.splitPeptide;
 
-	CE.splitPeptide = function (sequence) {
-	    return PEP.splitPeptide(sequence);
-	}
-
-	CE.digestPeptide = function (sequence, options) {
-	    return PEP.digestPeptide(sequence, options);
-	}
+	CE.digestPeptide = PEP.digestPeptide;
 
 	CE.massPeakPicking = massPeakPicking;
 
@@ -3309,6 +3303,3132 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var request = __webpack_require__(16)(__webpack_require__(17), Promise);
+	var Papa = __webpack_require__(23);
+	var CC = __webpack_require__(1);
+	var combineMFs = __webpack_require__(24);
+
+	function getContaminantsReferenceList() {
+
+	    return Promise.all([
+	        request.get('https://googledocs.cheminfo.org/spreadsheets/d/1LrJCl9-xSZKhGA9Y8nKVkYwB-mEOHBkTXg5qYXeFpZY/export?format=tsv').end(),
+	        request.get('https://googledocs.cheminfo.org/spreadsheets/d/1C_H9aiJyu9M9in7sHMOaz-d3Sv758rE72oLxEKH9ioA/export?format=tsv').end()
+	    ]).then(function (results) {
+	        return parse(results[0].text, results[1].text);
+	    });
+
+	    function parse(tsv, tsvReferences) {
+	        var contaminants=Papa.parse(tsv,
+	            {
+	                delimiter:"\t",
+	                header: true
+	            }
+	        ).data;
+
+	        var referencesArray=Papa.parse(tsvReferences,
+	            {
+	                delimiter:"\t",
+	                header: true
+	            }
+	        ).data;
+
+	        var references={};
+	        referencesArray.forEach(
+	            function(ref) {
+	                references[ref.label]=ref;
+	            }
+	        );
+
+	// contaminants=contaminants.slice(20,25);
+
+	        var results=[];
+
+	        for (var contaminant of contaminants) {
+	            // we add references
+	            var refs=contaminant.references.split(/[ ,]+/);
+	            contaminant.references=[];
+	            for (var ref of refs) {
+	                contaminant.references.push(
+	                    references[ref]
+	                );
+	            }
+
+	            // we need to calculate all the possibilities
+	            var mfs=combineMFs([contaminant.mf, contaminant.modif]);
+	            for (var mf of mfs) {
+	                mf.info=contaminant;
+	                mf.ESI = contaminant.ESI==='X' ? true : false;
+	                mf.MALDI = contaminant.MALDI==='X' ? true : false;
+	                mf.positive = contaminant.positive==='X' ? true : false;
+	                mf.negative = contaminant.negative==='X' ? true : false;
+	                mf.similarity='';
+	                mf.mf=CC.analyseMF(mf.mf).mf;
+	                results.push(mf)
+	            }
+	        }
+	        return results;
+	    }
+
+
+
+
+	}
+
+	module.exports = getContaminantsReferenceList;
+
+
+
+
+
+/***/ },
+/* 16 */
+/***/ function(module, exports) {
+
+	/**
+	 * Promise wrapper for superagent
+	 */
+
+	function wrap(superagent, Promise) {
+	  /**
+	   * Request object similar to superagent.Request, but with end() returning
+	   * a promise.
+	   */
+	  function PromiseRequest() {
+	    superagent.Request.apply(this, arguments);
+	  }
+
+	  // Inherit form superagent.Request
+	  PromiseRequest.prototype = Object.create(superagent.Request.prototype);
+
+	  /** Send request and get a promise that `end` was emitted */
+	  PromiseRequest.prototype.end = function(cb) {
+	    var _end = superagent.Request.prototype.end;
+	    var self = this;
+
+	    return new Promise(function(accept, reject) {
+	      _end.call(self, function(err, response) {
+	        if (cb) {
+	          cb(err, response);
+	        }
+
+	        if (err) {
+	          err.response = response;
+	          reject(err);
+	        } else {
+	          accept(response);
+	        }
+	      });
+	    });
+	  };
+
+	  /** Provide a more promise-y interface */
+	  PromiseRequest.prototype.then = function(resolve, reject) {
+	    var _end = superagent.Request.prototype.end;
+	    var self = this;
+
+	    return new Promise(function(accept, reject) {
+	      _end.call(self, function(err, response) {
+	        if (err) {
+	          err.response = response;
+	          reject(err);
+	        } else {
+	          accept(response);
+	        }
+	      });
+	    }).then(resolve, reject);
+	  };
+
+	  /**
+	   * Request builder with same interface as superagent.
+	   * It is convenient to import this as `request` in place of superagent.
+	   */
+	  var request = function(method, url) {
+	    return new PromiseRequest(method, url);
+	  };
+
+	  /** Helper for making an options request */
+	  request.options = function(url) {
+	    return request('OPTIONS', url);
+	  }
+
+	  /** Helper for making a head request */
+	  request.head = function(url, data) {
+	    var req = request('HEAD', url);
+	    if (data) {
+	      req.send(data);
+	    }
+	    return req;
+	  };
+
+	  /** Helper for making a get request */
+	  request.get = function(url, data) {
+	    var req = request('GET', url);
+	    if (data) {
+	      req.query(data);
+	    }
+	    return req;
+	  };
+
+	  /** Helper for making a post request */
+	  request.post = function(url, data) {
+	    var req = request('POST', url);
+	    if (data) {
+	      req.send(data);
+	    }
+	    return req;
+	  };
+
+	  /** Helper for making a put request */
+	  request.put = function(url, data) {
+	    var req = request('PUT', url);
+	    if (data) {
+	      req.send(data);
+	    }
+	    return req;
+	  };
+
+	  /** Helper for making a patch request */
+	  request.patch = function(url, data) {
+	    var req = request('PATCH', url);
+	    if (data) {
+	      req.send(data);
+	    }
+	    return req;
+	  };
+
+	  /** Helper for making a delete request */
+	  request.del = function(url) {
+	    return request('DELETE', url);
+	  };
+
+	  // Export the request builder
+	  return request;
+	}
+
+	module.exports = wrap;
+
+
+/***/ },
+/* 17 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Module dependencies.
+	 */
+
+	var Emitter = __webpack_require__(18);
+	var reduce = __webpack_require__(19);
+	var requestBase = __webpack_require__(20);
+	var isObject = __webpack_require__(21);
+
+	/**
+	 * Root reference for iframes.
+	 */
+
+	var root;
+	if (typeof window !== 'undefined') { // Browser window
+	  root = window;
+	} else if (typeof self !== 'undefined') { // Web Worker
+	  root = self;
+	} else { // Other environments
+	  root = this;
+	}
+
+	/**
+	 * Noop.
+	 */
+
+	function noop(){};
+
+	/**
+	 * Check if `obj` is a host object,
+	 * we don't want to serialize these :)
+	 *
+	 * TODO: future proof, move to compoent land
+	 *
+	 * @param {Object} obj
+	 * @return {Boolean}
+	 * @api private
+	 */
+
+	function isHost(obj) {
+	  var str = {}.toString.call(obj);
+
+	  switch (str) {
+	    case '[object File]':
+	    case '[object Blob]':
+	    case '[object FormData]':
+	      return true;
+	    default:
+	      return false;
+	  }
+	}
+
+	/**
+	 * Expose `request`.
+	 */
+
+	var request = module.exports = __webpack_require__(22).bind(null, Request);
+
+	/**
+	 * Determine XHR.
+	 */
+
+	request.getXHR = function () {
+	  if (root.XMLHttpRequest
+	      && (!root.location || 'file:' != root.location.protocol
+	          || !root.ActiveXObject)) {
+	    return new XMLHttpRequest;
+	  } else {
+	    try { return new ActiveXObject('Microsoft.XMLHTTP'); } catch(e) {}
+	    try { return new ActiveXObject('Msxml2.XMLHTTP.6.0'); } catch(e) {}
+	    try { return new ActiveXObject('Msxml2.XMLHTTP.3.0'); } catch(e) {}
+	    try { return new ActiveXObject('Msxml2.XMLHTTP'); } catch(e) {}
+	  }
+	  return false;
+	};
+
+	/**
+	 * Removes leading and trailing whitespace, added to support IE.
+	 *
+	 * @param {String} s
+	 * @return {String}
+	 * @api private
+	 */
+
+	var trim = ''.trim
+	  ? function(s) { return s.trim(); }
+	  : function(s) { return s.replace(/(^\s*|\s*$)/g, ''); };
+
+	/**
+	 * Serialize the given `obj`.
+	 *
+	 * @param {Object} obj
+	 * @return {String}
+	 * @api private
+	 */
+
+	function serialize(obj) {
+	  if (!isObject(obj)) return obj;
+	  var pairs = [];
+	  for (var key in obj) {
+	    if (null != obj[key]) {
+	      pushEncodedKeyValuePair(pairs, key, obj[key]);
+	        }
+	      }
+	  return pairs.join('&');
+	}
+
+	/**
+	 * Helps 'serialize' with serializing arrays.
+	 * Mutates the pairs array.
+	 *
+	 * @param {Array} pairs
+	 * @param {String} key
+	 * @param {Mixed} val
+	 */
+
+	function pushEncodedKeyValuePair(pairs, key, val) {
+	  if (Array.isArray(val)) {
+	    return val.forEach(function(v) {
+	      pushEncodedKeyValuePair(pairs, key, v);
+	    });
+	  }
+	  pairs.push(encodeURIComponent(key)
+	    + '=' + encodeURIComponent(val));
+	}
+
+	/**
+	 * Expose serialization method.
+	 */
+
+	 request.serializeObject = serialize;
+
+	 /**
+	  * Parse the given x-www-form-urlencoded `str`.
+	  *
+	  * @param {String} str
+	  * @return {Object}
+	  * @api private
+	  */
+
+	function parseString(str) {
+	  var obj = {};
+	  var pairs = str.split('&');
+	  var parts;
+	  var pair;
+
+	  for (var i = 0, len = pairs.length; i < len; ++i) {
+	    pair = pairs[i];
+	    parts = pair.split('=');
+	    obj[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
+	  }
+
+	  return obj;
+	}
+
+	/**
+	 * Expose parser.
+	 */
+
+	request.parseString = parseString;
+
+	/**
+	 * Default MIME type map.
+	 *
+	 *     superagent.types.xml = 'application/xml';
+	 *
+	 */
+
+	request.types = {
+	  html: 'text/html',
+	  json: 'application/json',
+	  xml: 'application/xml',
+	  urlencoded: 'application/x-www-form-urlencoded',
+	  'form': 'application/x-www-form-urlencoded',
+	  'form-data': 'application/x-www-form-urlencoded'
+	};
+
+	/**
+	 * Default serialization map.
+	 *
+	 *     superagent.serialize['application/xml'] = function(obj){
+	 *       return 'generated xml here';
+	 *     };
+	 *
+	 */
+
+	 request.serialize = {
+	   'application/x-www-form-urlencoded': serialize,
+	   'application/json': JSON.stringify
+	 };
+
+	 /**
+	  * Default parsers.
+	  *
+	  *     superagent.parse['application/xml'] = function(str){
+	  *       return { object parsed from str };
+	  *     };
+	  *
+	  */
+
+	request.parse = {
+	  'application/x-www-form-urlencoded': parseString,
+	  'application/json': JSON.parse
+	};
+
+	/**
+	 * Parse the given header `str` into
+	 * an object containing the mapped fields.
+	 *
+	 * @param {String} str
+	 * @return {Object}
+	 * @api private
+	 */
+
+	function parseHeader(str) {
+	  var lines = str.split(/\r?\n/);
+	  var fields = {};
+	  var index;
+	  var line;
+	  var field;
+	  var val;
+
+	  lines.pop(); // trailing CRLF
+
+	  for (var i = 0, len = lines.length; i < len; ++i) {
+	    line = lines[i];
+	    index = line.indexOf(':');
+	    field = line.slice(0, index).toLowerCase();
+	    val = trim(line.slice(index + 1));
+	    fields[field] = val;
+	  }
+
+	  return fields;
+	}
+
+	/**
+	 * Check if `mime` is json or has +json structured syntax suffix.
+	 *
+	 * @param {String} mime
+	 * @return {Boolean}
+	 * @api private
+	 */
+
+	function isJSON(mime) {
+	  return /[\/+]json\b/.test(mime);
+	}
+
+	/**
+	 * Return the mime type for the given `str`.
+	 *
+	 * @param {String} str
+	 * @return {String}
+	 * @api private
+	 */
+
+	function type(str){
+	  return str.split(/ *; */).shift();
+	};
+
+	/**
+	 * Return header field parameters.
+	 *
+	 * @param {String} str
+	 * @return {Object}
+	 * @api private
+	 */
+
+	function params(str){
+	  return reduce(str.split(/ *; */), function(obj, str){
+	    var parts = str.split(/ *= */)
+	      , key = parts.shift()
+	      , val = parts.shift();
+
+	    if (key && val) obj[key] = val;
+	    return obj;
+	  }, {});
+	};
+
+	/**
+	 * Initialize a new `Response` with the given `xhr`.
+	 *
+	 *  - set flags (.ok, .error, etc)
+	 *  - parse header
+	 *
+	 * Examples:
+	 *
+	 *  Aliasing `superagent` as `request` is nice:
+	 *
+	 *      request = superagent;
+	 *
+	 *  We can use the promise-like API, or pass callbacks:
+	 *
+	 *      request.get('/').end(function(res){});
+	 *      request.get('/', function(res){});
+	 *
+	 *  Sending data can be chained:
+	 *
+	 *      request
+	 *        .post('/user')
+	 *        .send({ name: 'tj' })
+	 *        .end(function(res){});
+	 *
+	 *  Or passed to `.send()`:
+	 *
+	 *      request
+	 *        .post('/user')
+	 *        .send({ name: 'tj' }, function(res){});
+	 *
+	 *  Or passed to `.post()`:
+	 *
+	 *      request
+	 *        .post('/user', { name: 'tj' })
+	 *        .end(function(res){});
+	 *
+	 * Or further reduced to a single call for simple cases:
+	 *
+	 *      request
+	 *        .post('/user', { name: 'tj' }, function(res){});
+	 *
+	 * @param {XMLHTTPRequest} xhr
+	 * @param {Object} options
+	 * @api private
+	 */
+
+	function Response(req, options) {
+	  options = options || {};
+	  this.req = req;
+	  this.xhr = this.req.xhr;
+	  // responseText is accessible only if responseType is '' or 'text' and on older browsers
+	  this.text = ((this.req.method !='HEAD' && (this.xhr.responseType === '' || this.xhr.responseType === 'text')) || typeof this.xhr.responseType === 'undefined')
+	     ? this.xhr.responseText
+	     : null;
+	  this.statusText = this.req.xhr.statusText;
+	  this.setStatusProperties(this.xhr.status);
+	  this.header = this.headers = parseHeader(this.xhr.getAllResponseHeaders());
+	  // getAllResponseHeaders sometimes falsely returns "" for CORS requests, but
+	  // getResponseHeader still works. so we get content-type even if getting
+	  // other headers fails.
+	  this.header['content-type'] = this.xhr.getResponseHeader('content-type');
+	  this.setHeaderProperties(this.header);
+	  this.body = this.req.method != 'HEAD'
+	    ? this.parseBody(this.text ? this.text : this.xhr.response)
+	    : null;
+	}
+
+	/**
+	 * Get case-insensitive `field` value.
+	 *
+	 * @param {String} field
+	 * @return {String}
+	 * @api public
+	 */
+
+	Response.prototype.get = function(field){
+	  return this.header[field.toLowerCase()];
+	};
+
+	/**
+	 * Set header related properties:
+	 *
+	 *   - `.type` the content type without params
+	 *
+	 * A response of "Content-Type: text/plain; charset=utf-8"
+	 * will provide you with a `.type` of "text/plain".
+	 *
+	 * @param {Object} header
+	 * @api private
+	 */
+
+	Response.prototype.setHeaderProperties = function(header){
+	  // content-type
+	  var ct = this.header['content-type'] || '';
+	  this.type = type(ct);
+
+	  // params
+	  var obj = params(ct);
+	  for (var key in obj) this[key] = obj[key];
+	};
+
+	/**
+	 * Parse the given body `str`.
+	 *
+	 * Used for auto-parsing of bodies. Parsers
+	 * are defined on the `superagent.parse` object.
+	 *
+	 * @param {String} str
+	 * @return {Mixed}
+	 * @api private
+	 */
+
+	Response.prototype.parseBody = function(str){
+	  var parse = request.parse[this.type];
+	  if (!parse && isJSON(this.type)) {
+	    parse = request.parse['application/json'];
+	  }
+	  return parse && str && (str.length || str instanceof Object)
+	    ? parse(str)
+	    : null;
+	};
+
+	/**
+	 * Set flags such as `.ok` based on `status`.
+	 *
+	 * For example a 2xx response will give you a `.ok` of __true__
+	 * whereas 5xx will be __false__ and `.error` will be __true__. The
+	 * `.clientError` and `.serverError` are also available to be more
+	 * specific, and `.statusType` is the class of error ranging from 1..5
+	 * sometimes useful for mapping respond colors etc.
+	 *
+	 * "sugar" properties are also defined for common cases. Currently providing:
+	 *
+	 *   - .noContent
+	 *   - .badRequest
+	 *   - .unauthorized
+	 *   - .notAcceptable
+	 *   - .notFound
+	 *
+	 * @param {Number} status
+	 * @api private
+	 */
+
+	Response.prototype.setStatusProperties = function(status){
+	  // handle IE9 bug: http://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
+	  if (status === 1223) {
+	    status = 204;
+	  }
+
+	  var type = status / 100 | 0;
+
+	  // status / class
+	  this.status = this.statusCode = status;
+	  this.statusType = type;
+
+	  // basics
+	  this.info = 1 == type;
+	  this.ok = 2 == type;
+	  this.clientError = 4 == type;
+	  this.serverError = 5 == type;
+	  this.error = (4 == type || 5 == type)
+	    ? this.toError()
+	    : false;
+
+	  // sugar
+	  this.accepted = 202 == status;
+	  this.noContent = 204 == status;
+	  this.badRequest = 400 == status;
+	  this.unauthorized = 401 == status;
+	  this.notAcceptable = 406 == status;
+	  this.notFound = 404 == status;
+	  this.forbidden = 403 == status;
+	};
+
+	/**
+	 * Return an `Error` representative of this response.
+	 *
+	 * @return {Error}
+	 * @api public
+	 */
+
+	Response.prototype.toError = function(){
+	  var req = this.req;
+	  var method = req.method;
+	  var url = req.url;
+
+	  var msg = 'cannot ' + method + ' ' + url + ' (' + this.status + ')';
+	  var err = new Error(msg);
+	  err.status = this.status;
+	  err.method = method;
+	  err.url = url;
+
+	  return err;
+	};
+
+	/**
+	 * Expose `Response`.
+	 */
+
+	request.Response = Response;
+
+	/**
+	 * Initialize a new `Request` with the given `method` and `url`.
+	 *
+	 * @param {String} method
+	 * @param {String} url
+	 * @api public
+	 */
+
+	function Request(method, url) {
+	  var self = this;
+	  this._query = this._query || [];
+	  this.method = method;
+	  this.url = url;
+	  this.header = {}; // preserves header name case
+	  this._header = {}; // coerces header names to lowercase
+	  this.on('end', function(){
+	    var err = null;
+	    var res = null;
+
+	    try {
+	      res = new Response(self);
+	    } catch(e) {
+	      err = new Error('Parser is unable to parse the response');
+	      err.parse = true;
+	      err.original = e;
+	      // issue #675: return the raw response if the response parsing fails
+	      err.rawResponse = self.xhr && self.xhr.responseText ? self.xhr.responseText : null;
+	      // issue #876: return the http status code if the response parsing fails
+	      err.statusCode = self.xhr && self.xhr.status ? self.xhr.status : null;
+	      return self.callback(err);
+	    }
+
+	    self.emit('response', res);
+
+	    if (err) {
+	      return self.callback(err, res);
+	    }
+
+	    if (res.status >= 200 && res.status < 300) {
+	      return self.callback(err, res);
+	    }
+
+	    var new_err = new Error(res.statusText || 'Unsuccessful HTTP response');
+	    new_err.original = err;
+	    new_err.response = res;
+	    new_err.status = res.status;
+
+	    self.callback(new_err, res);
+	  });
+	}
+
+	/**
+	 * Mixin `Emitter` and `requestBase`.
+	 */
+
+	Emitter(Request.prototype);
+	for (var key in requestBase) {
+	  Request.prototype[key] = requestBase[key];
+	}
+
+	/**
+	 * Abort the request, and clear potential timeout.
+	 *
+	 * @return {Request}
+	 * @api public
+	 */
+
+	Request.prototype.abort = function(){
+	  if (this.aborted) return;
+	  this.aborted = true;
+	  this.xhr.abort();
+	  this.clearTimeout();
+	  this.emit('abort');
+	  return this;
+	};
+
+	/**
+	 * Set Content-Type to `type`, mapping values from `request.types`.
+	 *
+	 * Examples:
+	 *
+	 *      superagent.types.xml = 'application/xml';
+	 *
+	 *      request.post('/')
+	 *        .type('xml')
+	 *        .send(xmlstring)
+	 *        .end(callback);
+	 *
+	 *      request.post('/')
+	 *        .type('application/xml')
+	 *        .send(xmlstring)
+	 *        .end(callback);
+	 *
+	 * @param {String} type
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+
+	Request.prototype.type = function(type){
+	  this.set('Content-Type', request.types[type] || type);
+	  return this;
+	};
+
+	/**
+	 * Set responseType to `val`. Presently valid responseTypes are 'blob' and 
+	 * 'arraybuffer'.
+	 *
+	 * Examples:
+	 *
+	 *      req.get('/')
+	 *        .responseType('blob')
+	 *        .end(callback);
+	 *
+	 * @param {String} val
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+
+	Request.prototype.responseType = function(val){
+	  this._responseType = val;
+	  return this;
+	};
+
+	/**
+	 * Set Accept to `type`, mapping values from `request.types`.
+	 *
+	 * Examples:
+	 *
+	 *      superagent.types.json = 'application/json';
+	 *
+	 *      request.get('/agent')
+	 *        .accept('json')
+	 *        .end(callback);
+	 *
+	 *      request.get('/agent')
+	 *        .accept('application/json')
+	 *        .end(callback);
+	 *
+	 * @param {String} accept
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+
+	Request.prototype.accept = function(type){
+	  this.set('Accept', request.types[type] || type);
+	  return this;
+	};
+
+	/**
+	 * Set Authorization field value with `user` and `pass`.
+	 *
+	 * @param {String} user
+	 * @param {String} pass
+	 * @param {Object} options with 'type' property 'auto' or 'basic' (default 'basic')
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+
+	Request.prototype.auth = function(user, pass, options){
+	  if (!options) {
+	    options = {
+	      type: 'basic'
+	    }
+	  }
+
+	  switch (options.type) {
+	    case 'basic':
+	      var str = btoa(user + ':' + pass);
+	      this.set('Authorization', 'Basic ' + str);
+	    break;
+
+	    case 'auto':
+	      this.username = user;
+	      this.password = pass;
+	    break;
+	  }
+	  return this;
+	};
+
+	/**
+	* Add query-string `val`.
+	*
+	* Examples:
+	*
+	*   request.get('/shoes')
+	*     .query('size=10')
+	*     .query({ color: 'blue' })
+	*
+	* @param {Object|String} val
+	* @return {Request} for chaining
+	* @api public
+	*/
+
+	Request.prototype.query = function(val){
+	  if ('string' != typeof val) val = serialize(val);
+	  if (val) this._query.push(val);
+	  return this;
+	};
+
+	/**
+	 * Queue the given `file` as an attachment to the specified `field`,
+	 * with optional `filename`.
+	 *
+	 * ``` js
+	 * request.post('/upload')
+	 *   .attach(new Blob(['<a id="a"><b id="b">hey!</b></a>'], { type: "text/html"}))
+	 *   .end(callback);
+	 * ```
+	 *
+	 * @param {String} field
+	 * @param {Blob|File} file
+	 * @param {String} filename
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+
+	Request.prototype.attach = function(field, file, filename){
+	  this._getFormData().append(field, file, filename || file.name);
+	  return this;
+	};
+
+	Request.prototype._getFormData = function(){
+	  if (!this._formData) {
+	    this._formData = new root.FormData();
+	  }
+	  return this._formData;
+	};
+
+	/**
+	 * Send `data` as the request body, defaulting the `.type()` to "json" when
+	 * an object is given.
+	 *
+	 * Examples:
+	 *
+	 *       // manual json
+	 *       request.post('/user')
+	 *         .type('json')
+	 *         .send('{"name":"tj"}')
+	 *         .end(callback)
+	 *
+	 *       // auto json
+	 *       request.post('/user')
+	 *         .send({ name: 'tj' })
+	 *         .end(callback)
+	 *
+	 *       // manual x-www-form-urlencoded
+	 *       request.post('/user')
+	 *         .type('form')
+	 *         .send('name=tj')
+	 *         .end(callback)
+	 *
+	 *       // auto x-www-form-urlencoded
+	 *       request.post('/user')
+	 *         .type('form')
+	 *         .send({ name: 'tj' })
+	 *         .end(callback)
+	 *
+	 *       // defaults to x-www-form-urlencoded
+	  *      request.post('/user')
+	  *        .send('name=tobi')
+	  *        .send('species=ferret')
+	  *        .end(callback)
+	 *
+	 * @param {String|Object} data
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+
+	Request.prototype.send = function(data){
+	  var obj = isObject(data);
+	  var type = this._header['content-type'];
+
+	  // merge
+	  if (obj && isObject(this._data)) {
+	    for (var key in data) {
+	      this._data[key] = data[key];
+	    }
+	  } else if ('string' == typeof data) {
+	    if (!type) this.type('form');
+	    type = this._header['content-type'];
+	    if ('application/x-www-form-urlencoded' == type) {
+	      this._data = this._data
+	        ? this._data + '&' + data
+	        : data;
+	    } else {
+	      this._data = (this._data || '') + data;
+	    }
+	  } else {
+	    this._data = data;
+	  }
+
+	  if (!obj || isHost(data)) return this;
+	  if (!type) this.type('json');
+	  return this;
+	};
+
+	/**
+	 * @deprecated
+	 */
+	Response.prototype.parse = function serialize(fn){
+	  if (root.console) {
+	    console.warn("Client-side parse() method has been renamed to serialize(). This method is not compatible with superagent v2.0");
+	  }
+	  this.serialize(fn);
+	  return this;
+	};
+
+	Response.prototype.serialize = function serialize(fn){
+	  this._parser = fn;
+	  return this;
+	};
+
+	/**
+	 * Invoke the callback with `err` and `res`
+	 * and handle arity check.
+	 *
+	 * @param {Error} err
+	 * @param {Response} res
+	 * @api private
+	 */
+
+	Request.prototype.callback = function(err, res){
+	  var fn = this._callback;
+	  this.clearTimeout();
+	  fn(err, res);
+	};
+
+	/**
+	 * Invoke callback with x-domain error.
+	 *
+	 * @api private
+	 */
+
+	Request.prototype.crossDomainError = function(){
+	  var err = new Error('Request has been terminated\nPossible causes: the network is offline, Origin is not allowed by Access-Control-Allow-Origin, the page is being unloaded, etc.');
+	  err.crossDomain = true;
+
+	  err.status = this.status;
+	  err.method = this.method;
+	  err.url = this.url;
+
+	  this.callback(err);
+	};
+
+	/**
+	 * Invoke callback with timeout error.
+	 *
+	 * @api private
+	 */
+
+	Request.prototype.timeoutError = function(){
+	  var timeout = this._timeout;
+	  var err = new Error('timeout of ' + timeout + 'ms exceeded');
+	  err.timeout = timeout;
+	  this.callback(err);
+	};
+
+	/**
+	 * Enable transmission of cookies with x-domain requests.
+	 *
+	 * Note that for this to work the origin must not be
+	 * using "Access-Control-Allow-Origin" with a wildcard,
+	 * and also must set "Access-Control-Allow-Credentials"
+	 * to "true".
+	 *
+	 * @api public
+	 */
+
+	Request.prototype.withCredentials = function(){
+	  this._withCredentials = true;
+	  return this;
+	};
+
+	/**
+	 * Initiate request, invoking callback `fn(res)`
+	 * with an instanceof `Response`.
+	 *
+	 * @param {Function} fn
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+
+	Request.prototype.end = function(fn){
+	  var self = this;
+	  var xhr = this.xhr = request.getXHR();
+	  var query = this._query.join('&');
+	  var timeout = this._timeout;
+	  var data = this._formData || this._data;
+
+	  // store callback
+	  this._callback = fn || noop;
+
+	  // state change
+	  xhr.onreadystatechange = function(){
+	    if (4 != xhr.readyState) return;
+
+	    // In IE9, reads to any property (e.g. status) off of an aborted XHR will
+	    // result in the error "Could not complete the operation due to error c00c023f"
+	    var status;
+	    try { status = xhr.status } catch(e) { status = 0; }
+
+	    if (0 == status) {
+	      if (self.timedout) return self.timeoutError();
+	      if (self.aborted) return;
+	      return self.crossDomainError();
+	    }
+	    self.emit('end');
+	  };
+
+	  // progress
+	  var handleProgress = function(e){
+	    if (e.total > 0) {
+	      e.percent = e.loaded / e.total * 100;
+	    }
+	    e.direction = 'download';
+	    self.emit('progress', e);
+	  };
+	  if (this.hasListeners('progress')) {
+	    xhr.onprogress = handleProgress;
+	  }
+	  try {
+	    if (xhr.upload && this.hasListeners('progress')) {
+	      xhr.upload.onprogress = handleProgress;
+	    }
+	  } catch(e) {
+	    // Accessing xhr.upload fails in IE from a web worker, so just pretend it doesn't exist.
+	    // Reported here:
+	    // https://connect.microsoft.com/IE/feedback/details/837245/xmlhttprequest-upload-throws-invalid-argument-when-used-from-web-worker-context
+	  }
+
+	  // timeout
+	  if (timeout && !this._timer) {
+	    this._timer = setTimeout(function(){
+	      self.timedout = true;
+	      self.abort();
+	    }, timeout);
+	  }
+
+	  // querystring
+	  if (query) {
+	    query = request.serializeObject(query);
+	    this.url += ~this.url.indexOf('?')
+	      ? '&' + query
+	      : '?' + query;
+	  }
+
+	  // initiate request
+	  if (this.username && this.password) {
+	    xhr.open(this.method, this.url, true, this.username, this.password);
+	  } else {
+	    xhr.open(this.method, this.url, true);
+	  }
+
+	  // CORS
+	  if (this._withCredentials) xhr.withCredentials = true;
+
+	  // body
+	  if ('GET' != this.method && 'HEAD' != this.method && 'string' != typeof data && !isHost(data)) {
+	    // serialize stuff
+	    var contentType = this._header['content-type'];
+	    var serialize = this._parser || request.serialize[contentType ? contentType.split(';')[0] : ''];
+	    if (!serialize && isJSON(contentType)) serialize = request.serialize['application/json'];
+	    if (serialize) data = serialize(data);
+	  }
+
+	  // set header fields
+	  for (var field in this.header) {
+	    if (null == this.header[field]) continue;
+	    xhr.setRequestHeader(field, this.header[field]);
+	  }
+
+	  if (this._responseType) {
+	    xhr.responseType = this._responseType;
+	  }
+
+	  // send stuff
+	  this.emit('request', this);
+
+	  // IE11 xhr.send(undefined) sends 'undefined' string as POST payload (instead of nothing)
+	  // We need null here if data is undefined
+	  xhr.send(typeof data !== 'undefined' ? data : null);
+	  return this;
+	};
+
+
+	/**
+	 * Expose `Request`.
+	 */
+
+	request.Request = Request;
+
+	/**
+	 * GET `url` with optional callback `fn(res)`.
+	 *
+	 * @param {String} url
+	 * @param {Mixed|Function} data or fn
+	 * @param {Function} fn
+	 * @return {Request}
+	 * @api public
+	 */
+
+	request.get = function(url, data, fn){
+	  var req = request('GET', url);
+	  if ('function' == typeof data) fn = data, data = null;
+	  if (data) req.query(data);
+	  if (fn) req.end(fn);
+	  return req;
+	};
+
+	/**
+	 * HEAD `url` with optional callback `fn(res)`.
+	 *
+	 * @param {String} url
+	 * @param {Mixed|Function} data or fn
+	 * @param {Function} fn
+	 * @return {Request}
+	 * @api public
+	 */
+
+	request.head = function(url, data, fn){
+	  var req = request('HEAD', url);
+	  if ('function' == typeof data) fn = data, data = null;
+	  if (data) req.send(data);
+	  if (fn) req.end(fn);
+	  return req;
+	};
+
+	/**
+	 * DELETE `url` with optional callback `fn(res)`.
+	 *
+	 * @param {String} url
+	 * @param {Function} fn
+	 * @return {Request}
+	 * @api public
+	 */
+
+	function del(url, fn){
+	  var req = request('DELETE', url);
+	  if (fn) req.end(fn);
+	  return req;
+	};
+
+	request['del'] = del;
+	request['delete'] = del;
+
+	/**
+	 * PATCH `url` with optional `data` and callback `fn(res)`.
+	 *
+	 * @param {String} url
+	 * @param {Mixed} data
+	 * @param {Function} fn
+	 * @return {Request}
+	 * @api public
+	 */
+
+	request.patch = function(url, data, fn){
+	  var req = request('PATCH', url);
+	  if ('function' == typeof data) fn = data, data = null;
+	  if (data) req.send(data);
+	  if (fn) req.end(fn);
+	  return req;
+	};
+
+	/**
+	 * POST `url` with optional `data` and callback `fn(res)`.
+	 *
+	 * @param {String} url
+	 * @param {Mixed} data
+	 * @param {Function} fn
+	 * @return {Request}
+	 * @api public
+	 */
+
+	request.post = function(url, data, fn){
+	  var req = request('POST', url);
+	  if ('function' == typeof data) fn = data, data = null;
+	  if (data) req.send(data);
+	  if (fn) req.end(fn);
+	  return req;
+	};
+
+	/**
+	 * PUT `url` with optional `data` and callback `fn(res)`.
+	 *
+	 * @param {String} url
+	 * @param {Mixed|Function} data or fn
+	 * @param {Function} fn
+	 * @return {Request}
+	 * @api public
+	 */
+
+	request.put = function(url, data, fn){
+	  var req = request('PUT', url);
+	  if ('function' == typeof data) fn = data, data = null;
+	  if (data) req.send(data);
+	  if (fn) req.end(fn);
+	  return req;
+	};
+
+
+/***/ },
+/* 18 */
+/***/ function(module, exports) {
+
+	
+	/**
+	 * Expose `Emitter`.
+	 */
+
+	module.exports = Emitter;
+
+	/**
+	 * Initialize a new `Emitter`.
+	 *
+	 * @api public
+	 */
+
+	function Emitter(obj) {
+	  if (obj) return mixin(obj);
+	};
+
+	/**
+	 * Mixin the emitter properties.
+	 *
+	 * @param {Object} obj
+	 * @return {Object}
+	 * @api private
+	 */
+
+	function mixin(obj) {
+	  for (var key in Emitter.prototype) {
+	    obj[key] = Emitter.prototype[key];
+	  }
+	  return obj;
+	}
+
+	/**
+	 * Listen on the given `event` with `fn`.
+	 *
+	 * @param {String} event
+	 * @param {Function} fn
+	 * @return {Emitter}
+	 * @api public
+	 */
+
+	Emitter.prototype.on =
+	Emitter.prototype.addEventListener = function(event, fn){
+	  this._callbacks = this._callbacks || {};
+	  (this._callbacks['$' + event] = this._callbacks['$' + event] || [])
+	    .push(fn);
+	  return this;
+	};
+
+	/**
+	 * Adds an `event` listener that will be invoked a single
+	 * time then automatically removed.
+	 *
+	 * @param {String} event
+	 * @param {Function} fn
+	 * @return {Emitter}
+	 * @api public
+	 */
+
+	Emitter.prototype.once = function(event, fn){
+	  function on() {
+	    this.off(event, on);
+	    fn.apply(this, arguments);
+	  }
+
+	  on.fn = fn;
+	  this.on(event, on);
+	  return this;
+	};
+
+	/**
+	 * Remove the given callback for `event` or all
+	 * registered callbacks.
+	 *
+	 * @param {String} event
+	 * @param {Function} fn
+	 * @return {Emitter}
+	 * @api public
+	 */
+
+	Emitter.prototype.off =
+	Emitter.prototype.removeListener =
+	Emitter.prototype.removeAllListeners =
+	Emitter.prototype.removeEventListener = function(event, fn){
+	  this._callbacks = this._callbacks || {};
+
+	  // all
+	  if (0 == arguments.length) {
+	    this._callbacks = {};
+	    return this;
+	  }
+
+	  // specific event
+	  var callbacks = this._callbacks['$' + event];
+	  if (!callbacks) return this;
+
+	  // remove all handlers
+	  if (1 == arguments.length) {
+	    delete this._callbacks['$' + event];
+	    return this;
+	  }
+
+	  // remove specific handler
+	  var cb;
+	  for (var i = 0; i < callbacks.length; i++) {
+	    cb = callbacks[i];
+	    if (cb === fn || cb.fn === fn) {
+	      callbacks.splice(i, 1);
+	      break;
+	    }
+	  }
+	  return this;
+	};
+
+	/**
+	 * Emit `event` with the given args.
+	 *
+	 * @param {String} event
+	 * @param {Mixed} ...
+	 * @return {Emitter}
+	 */
+
+	Emitter.prototype.emit = function(event){
+	  this._callbacks = this._callbacks || {};
+	  var args = [].slice.call(arguments, 1)
+	    , callbacks = this._callbacks['$' + event];
+
+	  if (callbacks) {
+	    callbacks = callbacks.slice(0);
+	    for (var i = 0, len = callbacks.length; i < len; ++i) {
+	      callbacks[i].apply(this, args);
+	    }
+	  }
+
+	  return this;
+	};
+
+	/**
+	 * Return array of callbacks for `event`.
+	 *
+	 * @param {String} event
+	 * @return {Array}
+	 * @api public
+	 */
+
+	Emitter.prototype.listeners = function(event){
+	  this._callbacks = this._callbacks || {};
+	  return this._callbacks['$' + event] || [];
+	};
+
+	/**
+	 * Check if this emitter has `event` handlers.
+	 *
+	 * @param {String} event
+	 * @return {Boolean}
+	 * @api public
+	 */
+
+	Emitter.prototype.hasListeners = function(event){
+	  return !! this.listeners(event).length;
+	};
+
+
+/***/ },
+/* 19 */
+/***/ function(module, exports) {
+
+	
+	/**
+	 * Reduce `arr` with `fn`.
+	 *
+	 * @param {Array} arr
+	 * @param {Function} fn
+	 * @param {Mixed} initial
+	 *
+	 * TODO: combatible error handling?
+	 */
+
+	module.exports = function(arr, fn, initial){  
+	  var idx = 0;
+	  var len = arr.length;
+	  var curr = arguments.length == 3
+	    ? initial
+	    : arr[idx++];
+
+	  while (idx < len) {
+	    curr = fn.call(null, curr, arr[idx], ++idx, arr);
+	  }
+	  
+	  return curr;
+	};
+
+/***/ },
+/* 20 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Module of mixed-in functions shared between node and client code
+	 */
+	var isObject = __webpack_require__(21);
+
+	/**
+	 * Clear previous timeout.
+	 *
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+
+	exports.clearTimeout = function _clearTimeout(){
+	  this._timeout = 0;
+	  clearTimeout(this._timer);
+	  return this;
+	};
+
+	/**
+	 * Force given parser
+	 *
+	 * Sets the body parser no matter type.
+	 *
+	 * @param {Function}
+	 * @api public
+	 */
+
+	exports.parse = function parse(fn){
+	  this._parser = fn;
+	  return this;
+	};
+
+	/**
+	 * Set timeout to `ms`.
+	 *
+	 * @param {Number} ms
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+
+	exports.timeout = function timeout(ms){
+	  this._timeout = ms;
+	  return this;
+	};
+
+	/**
+	 * Faux promise support
+	 *
+	 * @param {Function} fulfill
+	 * @param {Function} reject
+	 * @return {Request}
+	 */
+
+	exports.then = function then(fulfill, reject) {
+	  return this.end(function(err, res) {
+	    err ? reject(err) : fulfill(res);
+	  });
+	}
+
+	/**
+	 * Allow for extension
+	 */
+
+	exports.use = function use(fn) {
+	  fn(this);
+	  return this;
+	}
+
+
+	/**
+	 * Get request header `field`.
+	 * Case-insensitive.
+	 *
+	 * @param {String} field
+	 * @return {String}
+	 * @api public
+	 */
+
+	exports.get = function(field){
+	  return this._header[field.toLowerCase()];
+	};
+
+	/**
+	 * Get case-insensitive header `field` value.
+	 * This is a deprecated internal API. Use `.get(field)` instead.
+	 *
+	 * (getHeader is no longer used internally by the superagent code base)
+	 *
+	 * @param {String} field
+	 * @return {String}
+	 * @api private
+	 * @deprecated
+	 */
+
+	exports.getHeader = exports.get;
+
+	/**
+	 * Set header `field` to `val`, or multiple fields with one object.
+	 * Case-insensitive.
+	 *
+	 * Examples:
+	 *
+	 *      req.get('/')
+	 *        .set('Accept', 'application/json')
+	 *        .set('X-API-Key', 'foobar')
+	 *        .end(callback);
+	 *
+	 *      req.get('/')
+	 *        .set({ Accept: 'application/json', 'X-API-Key': 'foobar' })
+	 *        .end(callback);
+	 *
+	 * @param {String|Object} field
+	 * @param {String} val
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+
+	exports.set = function(field, val){
+	  if (isObject(field)) {
+	    for (var key in field) {
+	      this.set(key, field[key]);
+	    }
+	    return this;
+	  }
+	  this._header[field.toLowerCase()] = val;
+	  this.header[field] = val;
+	  return this;
+	};
+
+	/**
+	 * Remove header `field`.
+	 * Case-insensitive.
+	 *
+	 * Example:
+	 *
+	 *      req.get('/')
+	 *        .unset('User-Agent')
+	 *        .end(callback);
+	 *
+	 * @param {String} field
+	 */
+	exports.unset = function(field){
+	  delete this._header[field.toLowerCase()];
+	  delete this.header[field];
+	  return this;
+	};
+
+	/**
+	 * Write the field `name` and `val` for "multipart/form-data"
+	 * request bodies.
+	 *
+	 * ``` js
+	 * request.post('/upload')
+	 *   .field('foo', 'bar')
+	 *   .end(callback);
+	 * ```
+	 *
+	 * @param {String} name
+	 * @param {String|Blob|File|Buffer|fs.ReadStream} val
+	 * @return {Request} for chaining
+	 * @api public
+	 */
+	exports.field = function(name, val) {
+	  this._getFormData().append(name, val);
+	  return this;
+	};
+
+
+/***/ },
+/* 21 */
+/***/ function(module, exports) {
+
+	/**
+	 * Check if `obj` is an object.
+	 *
+	 * @param {Object} obj
+	 * @return {Boolean}
+	 * @api private
+	 */
+
+	function isObject(obj) {
+	  return null != obj && 'object' == typeof obj;
+	}
+
+	module.exports = isObject;
+
+
+/***/ },
+/* 22 */
+/***/ function(module, exports) {
+
+	// The node and browser modules expose versions of this with the
+	// appropriate constructor function bound as first argument
+	/**
+	 * Issue a request:
+	 *
+	 * Examples:
+	 *
+	 *    request('GET', '/users').end(callback)
+	 *    request('/users').end(callback)
+	 *    request('/users', callback)
+	 *
+	 * @param {String} method
+	 * @param {String|Function} url or callback
+	 * @return {Request}
+	 * @api public
+	 */
+
+	function request(RequestConstructor, method, url) {
+	  // callback
+	  if ('function' == typeof url) {
+	    return new RequestConstructor('GET', method).end(url);
+	  }
+
+	  // url first
+	  if (2 == arguments.length) {
+	    return new RequestConstructor('GET', method);
+	  }
+
+	  return new RequestConstructor(method, url);
+	}
+
+	module.exports = request;
+
+
+/***/ },
+/* 23 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/*!
+		Papa Parse
+		v4.1.2
+		https://github.com/mholt/PapaParse
+	*/
+	(function(global)
+	{
+		"use strict";
+
+		var IS_WORKER = !global.document && !!global.postMessage,
+			IS_PAPA_WORKER = IS_WORKER && /(\?|&)papaworker(=|&|$)/.test(global.location.search),
+			LOADED_SYNC = false, AUTO_SCRIPT_PATH;
+		var workers = {}, workerIdCounter = 0;
+
+		var Papa = {};
+
+		Papa.parse = CsvToJson;
+		Papa.unparse = JsonToCsv;
+
+		Papa.RECORD_SEP = String.fromCharCode(30);
+		Papa.UNIT_SEP = String.fromCharCode(31);
+		Papa.BYTE_ORDER_MARK = "\ufeff";
+		Papa.BAD_DELIMITERS = ["\r", "\n", "\"", Papa.BYTE_ORDER_MARK];
+		Papa.WORKERS_SUPPORTED = !IS_WORKER && !!global.Worker;
+		Papa.SCRIPT_PATH = null;	// Must be set by your code if you use workers and this lib is loaded asynchronously
+
+		// Configurable chunk sizes for local and remote files, respectively
+		Papa.LocalChunkSize = 1024 * 1024 * 10;	// 10 MB
+		Papa.RemoteChunkSize = 1024 * 1024 * 5;	// 5 MB
+		Papa.DefaultDelimiter = ",";			// Used if not specified and detection fails
+
+		// Exposed for testing and development only
+		Papa.Parser = Parser;
+		Papa.ParserHandle = ParserHandle;
+		Papa.NetworkStreamer = NetworkStreamer;
+		Papa.FileStreamer = FileStreamer;
+		Papa.StringStreamer = StringStreamer;
+
+		if (typeof module !== 'undefined' && module.exports)
+		{
+			// Export to Node...
+			module.exports = Papa;
+		}
+		else if (isFunction(global.define) && global.define.amd)
+		{
+			// Wireup with RequireJS
+			!(__WEBPACK_AMD_DEFINE_RESULT__ = function() { return Papa; }.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+		}
+		else
+		{
+			// ...or as browser global
+			global.Papa = Papa;
+		}
+
+		if (global.jQuery)
+		{
+			var $ = global.jQuery;
+			$.fn.parse = function(options)
+			{
+				var config = options.config || {};
+				var queue = [];
+
+				this.each(function(idx)
+				{
+					var supported = $(this).prop('tagName').toUpperCase() == "INPUT"
+									&& $(this).attr('type').toLowerCase() == "file"
+									&& global.FileReader;
+
+					if (!supported || !this.files || this.files.length == 0)
+						return true;	// continue to next input element
+
+					for (var i = 0; i < this.files.length; i++)
+					{
+						queue.push({
+							file: this.files[i],
+							inputElem: this,
+							instanceConfig: $.extend({}, config)
+						});
+					}
+				});
+
+				parseNextFile();	// begin parsing
+				return this;		// maintains chainability
+
+
+				function parseNextFile()
+				{
+					if (queue.length == 0)
+					{
+						if (isFunction(options.complete))
+							options.complete();
+						return;
+					}
+
+					var f = queue[0];
+
+					if (isFunction(options.before))
+					{
+						var returned = options.before(f.file, f.inputElem);
+
+						if (typeof returned === 'object')
+						{
+							if (returned.action == "abort")
+							{
+								error("AbortError", f.file, f.inputElem, returned.reason);
+								return;	// Aborts all queued files immediately
+							}
+							else if (returned.action == "skip")
+							{
+								fileComplete();	// parse the next file in the queue, if any
+								return;
+							}
+							else if (typeof returned.config === 'object')
+								f.instanceConfig = $.extend(f.instanceConfig, returned.config);
+						}
+						else if (returned == "skip")
+						{
+							fileComplete();	// parse the next file in the queue, if any
+							return;
+						}
+					}
+
+					// Wrap up the user's complete callback, if any, so that ours also gets executed
+					var userCompleteFunc = f.instanceConfig.complete;
+					f.instanceConfig.complete = function(results)
+					{
+						if (isFunction(userCompleteFunc))
+							userCompleteFunc(results, f.file, f.inputElem);
+						fileComplete();
+					};
+
+					Papa.parse(f.file, f.instanceConfig);
+				}
+
+				function error(name, file, elem, reason)
+				{
+					if (isFunction(options.error))
+						options.error({name: name}, file, elem, reason);
+				}
+
+				function fileComplete()
+				{
+					queue.splice(0, 1);
+					parseNextFile();
+				}
+			}
+		}
+
+
+		if (IS_PAPA_WORKER)
+		{
+			global.onmessage = workerThreadReceivedMessage;
+		}
+		else if (Papa.WORKERS_SUPPORTED)
+		{
+			AUTO_SCRIPT_PATH = getScriptPath();
+
+			// Check if the script was loaded synchronously
+			if (!document.body)
+			{
+				// Body doesn't exist yet, must be synchronous
+				LOADED_SYNC = true;
+			}
+			else
+			{
+				document.addEventListener('DOMContentLoaded', function () {
+					LOADED_SYNC = true;
+				}, true);
+			}
+		}
+
+
+
+
+		function CsvToJson(_input, _config)
+		{
+			_config = _config || {};
+
+			if (_config.worker && Papa.WORKERS_SUPPORTED)
+			{
+				var w = newWorker();
+
+				w.userStep = _config.step;
+				w.userChunk = _config.chunk;
+				w.userComplete = _config.complete;
+				w.userError = _config.error;
+
+				_config.step = isFunction(_config.step);
+				_config.chunk = isFunction(_config.chunk);
+				_config.complete = isFunction(_config.complete);
+				_config.error = isFunction(_config.error);
+				delete _config.worker;	// prevent infinite loop
+
+				w.postMessage({
+					input: _input,
+					config: _config,
+					workerId: w.id
+				});
+
+				return;
+			}
+
+			var streamer = null;
+			if (typeof _input === 'string')
+			{
+				if (_config.download)
+					streamer = new NetworkStreamer(_config);
+				else
+					streamer = new StringStreamer(_config);
+			}
+			else if ((global.File && _input instanceof File) || _input instanceof Object)	// ...Safari. (see issue #106)
+				streamer = new FileStreamer(_config);
+
+			return streamer.stream(_input);
+		}
+
+
+
+
+
+
+		function JsonToCsv(_input, _config)
+		{
+			var _output = "";
+			var _fields = [];
+
+			// Default configuration
+
+			/** whether to surround every datum with quotes */
+			var _quotes = false;
+
+			/** delimiting character */
+			var _delimiter = ",";
+
+			/** newline character(s) */
+			var _newline = "\r\n";
+
+			unpackConfig();
+
+			if (typeof _input === 'string')
+				_input = JSON.parse(_input);
+
+			if (_input instanceof Array)
+			{
+				if (!_input.length || _input[0] instanceof Array)
+					return serialize(null, _input);
+				else if (typeof _input[0] === 'object')
+					return serialize(objectKeys(_input[0]), _input);
+			}
+			else if (typeof _input === 'object')
+			{
+				if (typeof _input.data === 'string')
+					_input.data = JSON.parse(_input.data);
+
+				if (_input.data instanceof Array)
+				{
+					if (!_input.fields)
+						_input.fields = _input.data[0] instanceof Array
+										? _input.fields
+										: objectKeys(_input.data[0]);
+
+					if (!(_input.data[0] instanceof Array) && typeof _input.data[0] !== 'object')
+						_input.data = [_input.data];	// handles input like [1,2,3] or ["asdf"]
+				}
+
+				return serialize(_input.fields || [], _input.data || []);
+			}
+
+			// Default (any valid paths should return before this)
+			throw "exception: Unable to serialize unrecognized input";
+
+
+			function unpackConfig()
+			{
+				if (typeof _config !== 'object')
+					return;
+
+				if (typeof _config.delimiter === 'string'
+					&& _config.delimiter.length == 1
+					&& Papa.BAD_DELIMITERS.indexOf(_config.delimiter) == -1)
+				{
+					_delimiter = _config.delimiter;
+				}
+
+				if (typeof _config.quotes === 'boolean'
+					|| _config.quotes instanceof Array)
+					_quotes = _config.quotes;
+
+				if (typeof _config.newline === 'string')
+					_newline = _config.newline;
+			}
+
+
+			/** Turns an object's keys into an array */
+			function objectKeys(obj)
+			{
+				if (typeof obj !== 'object')
+					return [];
+				var keys = [];
+				for (var key in obj)
+					keys.push(key);
+				return keys;
+			}
+
+			/** The double for loop that iterates the data and writes out a CSV string including header row */
+			function serialize(fields, data)
+			{
+				var csv = "";
+
+				if (typeof fields === 'string')
+					fields = JSON.parse(fields);
+				if (typeof data === 'string')
+					data = JSON.parse(data);
+
+				var hasHeader = fields instanceof Array && fields.length > 0;
+				var dataKeyedByField = !(data[0] instanceof Array);
+
+				// If there a header row, write it first
+				if (hasHeader)
+				{
+					for (var i = 0; i < fields.length; i++)
+					{
+						if (i > 0)
+							csv += _delimiter;
+						csv += safe(fields[i], i);
+					}
+					if (data.length > 0)
+						csv += _newline;
+				}
+
+				// Then write out the data
+				for (var row = 0; row < data.length; row++)
+				{
+					var maxCol = hasHeader ? fields.length : data[row].length;
+
+					for (var col = 0; col < maxCol; col++)
+					{
+						if (col > 0)
+							csv += _delimiter;
+						var colIdx = hasHeader && dataKeyedByField ? fields[col] : col;
+						csv += safe(data[row][colIdx], col);
+					}
+
+					if (row < data.length - 1)
+						csv += _newline;
+				}
+
+				return csv;
+			}
+
+			/** Encloses a value around quotes if needed (makes a value safe for CSV insertion) */
+			function safe(str, col)
+			{
+				if (typeof str === "undefined" || str === null)
+					return "";
+
+				str = str.toString().replace(/"/g, '""');
+
+				var needsQuotes = (typeof _quotes === 'boolean' && _quotes)
+								|| (_quotes instanceof Array && _quotes[col])
+								|| hasAny(str, Papa.BAD_DELIMITERS)
+								|| str.indexOf(_delimiter) > -1
+								|| str.charAt(0) == ' '
+								|| str.charAt(str.length - 1) == ' ';
+
+				return needsQuotes ? '"' + str + '"' : str;
+			}
+
+			function hasAny(str, substrings)
+			{
+				for (var i = 0; i < substrings.length; i++)
+					if (str.indexOf(substrings[i]) > -1)
+						return true;
+				return false;
+			}
+		}
+
+		/** ChunkStreamer is the base prototype for various streamer implementations. */
+		function ChunkStreamer(config)
+		{
+			this._handle = null;
+			this._paused = false;
+			this._finished = false;
+			this._input = null;
+			this._baseIndex = 0;
+			this._partialLine = "";
+			this._rowCount = 0;
+			this._start = 0;
+			this._nextChunk = null;
+			this.isFirstChunk = true;
+			this._completeResults = {
+				data: [],
+				errors: [],
+				meta: {}
+			};
+			replaceConfig.call(this, config);
+
+			this.parseChunk = function(chunk)
+			{
+				// First chunk pre-processing
+				if (this.isFirstChunk && isFunction(this._config.beforeFirstChunk))
+				{
+					var modifiedChunk = this._config.beforeFirstChunk(chunk);
+					if (modifiedChunk !== undefined)
+						chunk = modifiedChunk;
+				}
+				this.isFirstChunk = false;
+
+				// Rejoin the line we likely just split in two by chunking the file
+				var aggregate = this._partialLine + chunk;
+				this._partialLine = "";
+
+				var results = this._handle.parse(aggregate, this._baseIndex, !this._finished);
+				
+				if (this._handle.paused() || this._handle.aborted())
+					return;
+				
+				var lastIndex = results.meta.cursor;
+				
+				if (!this._finished)
+				{
+					this._partialLine = aggregate.substring(lastIndex - this._baseIndex);
+					this._baseIndex = lastIndex;
+				}
+
+				if (results && results.data)
+					this._rowCount += results.data.length;
+
+				var finishedIncludingPreview = this._finished || (this._config.preview && this._rowCount >= this._config.preview);
+
+				if (IS_PAPA_WORKER)
+				{
+					global.postMessage({
+						results: results,
+						workerId: Papa.WORKER_ID,
+						finished: finishedIncludingPreview
+					});
+				}
+				else if (isFunction(this._config.chunk))
+				{
+					this._config.chunk(results, this._handle);
+					if (this._paused)
+						return;
+					results = undefined;
+					this._completeResults = undefined;
+				}
+
+				if (!this._config.step && !this._config.chunk) {
+					this._completeResults.data = this._completeResults.data.concat(results.data);
+					this._completeResults.errors = this._completeResults.errors.concat(results.errors);
+					this._completeResults.meta = results.meta;
+				}
+
+				if (finishedIncludingPreview && isFunction(this._config.complete) && (!results || !results.meta.aborted))
+					this._config.complete(this._completeResults);
+
+				if (!finishedIncludingPreview && (!results || !results.meta.paused))
+					this._nextChunk();
+
+				return results;
+			};
+
+			this._sendError = function(error)
+			{
+				if (isFunction(this._config.error))
+					this._config.error(error);
+				else if (IS_PAPA_WORKER && this._config.error)
+				{
+					global.postMessage({
+						workerId: Papa.WORKER_ID,
+						error: error,
+						finished: false
+					});
+				}
+			};
+
+			function replaceConfig(config)
+			{
+				// Deep-copy the config so we can edit it
+				var configCopy = copy(config);
+				configCopy.chunkSize = parseInt(configCopy.chunkSize);	// parseInt VERY important so we don't concatenate strings!
+				if (!config.step && !config.chunk)
+					configCopy.chunkSize = null;  // disable Range header if not streaming; bad values break IIS - see issue #196
+				this._handle = new ParserHandle(configCopy);
+				this._handle.streamer = this;
+				this._config = configCopy;	// persist the copy to the caller
+			}
+		}
+
+
+		function NetworkStreamer(config)
+		{
+			config = config || {};
+			if (!config.chunkSize)
+				config.chunkSize = Papa.RemoteChunkSize;
+			ChunkStreamer.call(this, config);
+
+			var xhr;
+
+			if (IS_WORKER)
+			{
+				this._nextChunk = function()
+				{
+					this._readChunk();
+					this._chunkLoaded();
+				};
+			}
+			else
+			{
+				this._nextChunk = function()
+				{
+					this._readChunk();
+				};
+			}
+
+			this.stream = function(url)
+			{
+				this._input = url;
+				this._nextChunk();	// Starts streaming
+			};
+
+			this._readChunk = function()
+			{
+				if (this._finished)
+				{
+					this._chunkLoaded();
+					return;
+				}
+
+				xhr = new XMLHttpRequest();
+				
+				if (!IS_WORKER)
+				{
+					xhr.onload = bindFunction(this._chunkLoaded, this);
+					xhr.onerror = bindFunction(this._chunkError, this);
+				}
+
+				xhr.open("GET", this._input, !IS_WORKER);
+				
+				if (this._config.chunkSize)
+				{
+					var end = this._start + this._config.chunkSize - 1;	// minus one because byte range is inclusive
+					xhr.setRequestHeader("Range", "bytes="+this._start+"-"+end);
+					xhr.setRequestHeader("If-None-Match", "webkit-no-cache"); // https://bugs.webkit.org/show_bug.cgi?id=82672
+				}
+
+				try {
+					xhr.send();
+				}
+				catch (err) {
+					this._chunkError(err.message);
+				}
+
+				if (IS_WORKER && xhr.status == 0)
+					this._chunkError();
+				else
+					this._start += this._config.chunkSize;
+			}
+
+			this._chunkLoaded = function()
+			{
+				if (xhr.readyState != 4)
+					return;
+
+				if (xhr.status < 200 || xhr.status >= 400)
+				{
+					this._chunkError();
+					return;
+				}
+
+				this._finished = !this._config.chunkSize || this._start > getFileSize(xhr);
+				this.parseChunk(xhr.responseText);
+			}
+
+			this._chunkError = function(errorMessage)
+			{
+				var errorText = xhr.statusText || errorMessage;
+				this._sendError(errorText);
+			}
+
+			function getFileSize(xhr)
+			{
+				var contentRange = xhr.getResponseHeader("Content-Range");
+				return parseInt(contentRange.substr(contentRange.lastIndexOf("/") + 1));
+			}
+		}
+		NetworkStreamer.prototype = Object.create(ChunkStreamer.prototype);
+		NetworkStreamer.prototype.constructor = NetworkStreamer;
+
+
+		function FileStreamer(config)
+		{
+			config = config || {};
+			if (!config.chunkSize)
+				config.chunkSize = Papa.LocalChunkSize;
+			ChunkStreamer.call(this, config);
+
+			var reader, slice;
+
+			// FileReader is better than FileReaderSync (even in worker) - see http://stackoverflow.com/q/24708649/1048862
+			// But Firefox is a pill, too - see issue #76: https://github.com/mholt/PapaParse/issues/76
+			var usingAsyncReader = typeof FileReader !== 'undefined';	// Safari doesn't consider it a function - see issue #105
+
+			this.stream = function(file)
+			{
+				this._input = file;
+				slice = file.slice || file.webkitSlice || file.mozSlice;
+
+				if (usingAsyncReader)
+				{
+					reader = new FileReader();		// Preferred method of reading files, even in workers
+					reader.onload = bindFunction(this._chunkLoaded, this);
+					reader.onerror = bindFunction(this._chunkError, this);
+				}
+				else
+					reader = new FileReaderSync();	// Hack for running in a web worker in Firefox
+
+				this._nextChunk();	// Starts streaming
+			};
+
+			this._nextChunk = function()
+			{
+				if (!this._finished && (!this._config.preview || this._rowCount < this._config.preview))
+					this._readChunk();
+			}
+
+			this._readChunk = function()
+			{
+				var input = this._input;
+				if (this._config.chunkSize)
+				{
+					var end = Math.min(this._start + this._config.chunkSize, this._input.size);
+					input = slice.call(input, this._start, end);
+				}
+				var txt = reader.readAsText(input, this._config.encoding);
+				if (!usingAsyncReader)
+					this._chunkLoaded({ target: { result: txt } });	// mimic the async signature
+			}
+
+			this._chunkLoaded = function(event)
+			{
+				// Very important to increment start each time before handling results
+				this._start += this._config.chunkSize;
+				this._finished = !this._config.chunkSize || this._start >= this._input.size;
+				this.parseChunk(event.target.result);
+			}
+
+			this._chunkError = function()
+			{
+				this._sendError(reader.error);
+			}
+
+		}
+		FileStreamer.prototype = Object.create(ChunkStreamer.prototype);
+		FileStreamer.prototype.constructor = FileStreamer;
+
+
+		function StringStreamer(config)
+		{
+			config = config || {};
+			ChunkStreamer.call(this, config);
+
+			var string;
+			var remaining;
+			this.stream = function(s)
+			{
+				string = s;
+				remaining = s;
+				return this._nextChunk();
+			}
+			this._nextChunk = function()
+			{
+				if (this._finished) return;
+				var size = this._config.chunkSize;
+				var chunk = size ? remaining.substr(0, size) : remaining;
+				remaining = size ? remaining.substr(size) : '';
+				this._finished = !remaining;
+				return this.parseChunk(chunk);
+			}
+		}
+		StringStreamer.prototype = Object.create(StringStreamer.prototype);
+		StringStreamer.prototype.constructor = StringStreamer;
+
+
+
+		// Use one ParserHandle per entire CSV file or string
+		function ParserHandle(_config)
+		{
+			// One goal is to minimize the use of regular expressions...
+			var FLOAT = /^\s*-?(\d*\.?\d+|\d+\.?\d*)(e[-+]?\d+)?\s*$/i;
+
+			var self = this;
+			var _stepCounter = 0;	// Number of times step was called (number of rows parsed)
+			var _input;				// The input being parsed
+			var _parser;			// The core parser being used
+			var _paused = false;	// Whether we are paused or not
+			var _aborted = false;   // Whether the parser has aborted or not
+			var _delimiterError;	// Temporary state between delimiter detection and processing results
+			var _fields = [];		// Fields are from the header row of the input, if there is one
+			var _results = {		// The last results returned from the parser
+				data: [],
+				errors: [],
+				meta: {}
+			};
+
+			if (isFunction(_config.step))
+			{
+				var userStep = _config.step;
+				_config.step = function(results)
+				{
+					_results = results;
+
+					if (needsHeaderRow())
+						processResults();
+					else	// only call user's step function after header row
+					{
+						processResults();
+
+						// It's possbile that this line was empty and there's no row here after all
+						if (_results.data.length == 0)
+							return;
+
+						_stepCounter += results.data.length;
+						if (_config.preview && _stepCounter > _config.preview)
+							_parser.abort();
+						else
+							userStep(_results, self);
+					}
+				};
+			}
+
+			/**
+			 * Parses input. Most users won't need, and shouldn't mess with, the baseIndex
+			 * and ignoreLastRow parameters. They are used by streamers (wrapper functions)
+			 * when an input comes in multiple chunks, like from a file.
+			 */
+			this.parse = function(input, baseIndex, ignoreLastRow)
+			{
+				if (!_config.newline)
+					_config.newline = guessLineEndings(input);
+
+				_delimiterError = false;
+				if (!_config.delimiter)
+				{
+					var delimGuess = guessDelimiter(input);
+					if (delimGuess.successful)
+						_config.delimiter = delimGuess.bestDelimiter;
+					else
+					{
+						_delimiterError = true;	// add error after parsing (otherwise it would be overwritten)
+						_config.delimiter = Papa.DefaultDelimiter;
+					}
+					_results.meta.delimiter = _config.delimiter;
+				}
+
+				var parserConfig = copy(_config);
+				if (_config.preview && _config.header)
+					parserConfig.preview++;	// to compensate for header row
+
+				_input = input;
+				_parser = new Parser(parserConfig);
+				_results = _parser.parse(_input, baseIndex, ignoreLastRow);
+				processResults();
+				return _paused ? { meta: { paused: true } } : (_results || { meta: { paused: false } });
+			};
+
+			this.paused = function()
+			{
+				return _paused;
+			};
+
+			this.pause = function()
+			{
+				_paused = true;
+				_parser.abort();
+				_input = _input.substr(_parser.getCharIndex());
+			};
+
+			this.resume = function()
+			{
+				_paused = false;
+				self.streamer.parseChunk(_input);
+			};
+
+			this.aborted = function () {
+				return _aborted;
+			}
+
+			this.abort = function()
+			{
+				_aborted = true;
+				_parser.abort();
+				_results.meta.aborted = true;
+				if (isFunction(_config.complete))
+					_config.complete(_results);
+				_input = "";
+			};
+
+			function processResults()
+			{
+				if (_results && _delimiterError)
+				{
+					addError("Delimiter", "UndetectableDelimiter", "Unable to auto-detect delimiting character; defaulted to '"+Papa.DefaultDelimiter+"'");
+					_delimiterError = false;
+				}
+
+				if (_config.skipEmptyLines)
+				{
+					for (var i = 0; i < _results.data.length; i++)
+						if (_results.data[i].length == 1 && _results.data[i][0] == "")
+							_results.data.splice(i--, 1);
+				}
+
+				if (needsHeaderRow())
+					fillHeaderFields();
+
+				return applyHeaderAndDynamicTyping();
+			}
+
+			function needsHeaderRow()
+			{
+				return _config.header && _fields.length == 0;
+			}
+
+			function fillHeaderFields()
+			{
+				if (!_results)
+					return;
+				for (var i = 0; needsHeaderRow() && i < _results.data.length; i++)
+					for (var j = 0; j < _results.data[i].length; j++)
+						_fields.push(_results.data[i][j]);
+				_results.data.splice(0, 1);
+			}
+
+			function applyHeaderAndDynamicTyping()
+			{
+				if (!_results || (!_config.header && !_config.dynamicTyping))
+					return _results;
+
+				for (var i = 0; i < _results.data.length; i++)
+				{
+					var row = {};
+
+					for (var j = 0; j < _results.data[i].length; j++)
+					{
+						if (_config.dynamicTyping)
+						{
+							var value = _results.data[i][j];
+							if (value == "true" || value == "TRUE")
+								_results.data[i][j] = true;
+							else if (value == "false" || value == "FALSE")
+								_results.data[i][j] = false;
+							else
+								_results.data[i][j] = tryParseFloat(value);
+						}
+
+						if (_config.header)
+						{
+							if (j >= _fields.length)
+							{
+								if (!row["__parsed_extra"])
+									row["__parsed_extra"] = [];
+								row["__parsed_extra"].push(_results.data[i][j]);
+							}
+							else
+								row[_fields[j]] = _results.data[i][j];
+						}
+					}
+
+					if (_config.header)
+					{
+						_results.data[i] = row;
+						if (j > _fields.length)
+							addError("FieldMismatch", "TooManyFields", "Too many fields: expected " + _fields.length + " fields but parsed " + j, i);
+						else if (j < _fields.length)
+							addError("FieldMismatch", "TooFewFields", "Too few fields: expected " + _fields.length + " fields but parsed " + j, i);
+					}
+				}
+
+				if (_config.header && _results.meta)
+					_results.meta.fields = _fields;
+				return _results;
+			}
+
+			function guessDelimiter(input)
+			{
+				var delimChoices = [",", "\t", "|", ";", Papa.RECORD_SEP, Papa.UNIT_SEP];
+				var bestDelim, bestDelta, fieldCountPrevRow;
+
+				for (var i = 0; i < delimChoices.length; i++)
+				{
+					var delim = delimChoices[i];
+					var delta = 0, avgFieldCount = 0;
+					fieldCountPrevRow = undefined;
+
+					var preview = new Parser({
+						delimiter: delim,
+						preview: 10
+					}).parse(input);
+
+					for (var j = 0; j < preview.data.length; j++)
+					{
+						var fieldCount = preview.data[j].length;
+						avgFieldCount += fieldCount;
+
+						if (typeof fieldCountPrevRow === 'undefined')
+						{
+							fieldCountPrevRow = fieldCount;
+							continue;
+						}
+						else if (fieldCount > 1)
+						{
+							delta += Math.abs(fieldCount - fieldCountPrevRow);
+							fieldCountPrevRow = fieldCount;
+						}
+					}
+
+					if (preview.data.length > 0)
+						avgFieldCount /= preview.data.length;
+
+					if ((typeof bestDelta === 'undefined' || delta < bestDelta)
+						&& avgFieldCount > 1.99)
+					{
+						bestDelta = delta;
+						bestDelim = delim;
+					}
+				}
+
+				_config.delimiter = bestDelim;
+
+				return {
+					successful: !!bestDelim,
+					bestDelimiter: bestDelim
+				}
+			}
+
+			function guessLineEndings(input)
+			{
+				input = input.substr(0, 1024*1024);	// max length 1 MB
+
+				var r = input.split('\r');
+
+				if (r.length == 1)
+					return '\n';
+
+				var numWithN = 0;
+				for (var i = 0; i < r.length; i++)
+				{
+					if (r[i][0] == '\n')
+						numWithN++;
+				}
+
+				return numWithN >= r.length / 2 ? '\r\n' : '\r';
+			}
+
+			function tryParseFloat(val)
+			{
+				var isNumber = FLOAT.test(val);
+				return isNumber ? parseFloat(val) : val;
+			}
+
+			function addError(type, code, msg, row)
+			{
+				_results.errors.push({
+					type: type,
+					code: code,
+					message: msg,
+					row: row
+				});
+			}
+		}
+
+
+
+
+
+		/** The core parser implements speedy and correct CSV parsing */
+		function Parser(config)
+		{
+			// Unpack the config object
+			config = config || {};
+			var delim = config.delimiter;
+			var newline = config.newline;
+			var comments = config.comments;
+			var step = config.step;
+			var preview = config.preview;
+			var fastMode = config.fastMode;
+
+			// Delimiter must be valid
+			if (typeof delim !== 'string'
+				|| Papa.BAD_DELIMITERS.indexOf(delim) > -1)
+				delim = ",";
+
+			// Comment character must be valid
+			if (comments === delim)
+				throw "Comment character same as delimiter";
+			else if (comments === true)
+				comments = "#";
+			else if (typeof comments !== 'string'
+				|| Papa.BAD_DELIMITERS.indexOf(comments) > -1)
+				comments = false;
+
+			// Newline must be valid: \r, \n, or \r\n
+			if (newline != '\n' && newline != '\r' && newline != '\r\n')
+				newline = '\n';
+
+			// We're gonna need these at the Parser scope
+			var cursor = 0;
+			var aborted = false;
+
+			this.parse = function(input, baseIndex, ignoreLastRow)
+			{
+				// For some reason, in Chrome, this speeds things up (!?)
+				if (typeof input !== 'string')
+					throw "Input must be a string";
+
+				// We don't need to compute some of these every time parse() is called,
+				// but having them in a more local scope seems to perform better
+				var inputLen = input.length,
+					delimLen = delim.length,
+					newlineLen = newline.length,
+					commentsLen = comments.length;
+				var stepIsFunction = typeof step === 'function';
+
+				// Establish starting state
+				cursor = 0;
+				var data = [], errors = [], row = [], lastCursor = 0;
+
+				if (!input)
+					return returnable();
+
+				if (fastMode || (fastMode !== false && input.indexOf('"') === -1))
+				{
+					var rows = input.split(newline);
+					for (var i = 0; i < rows.length; i++)
+					{
+						var row = rows[i];
+						cursor += row.length;
+						if (i !== rows.length - 1)
+							cursor += newline.length;
+						else if (ignoreLastRow)
+							return returnable();
+						if (comments && row.substr(0, commentsLen) == comments)
+							continue;
+						if (stepIsFunction)
+						{
+							data = [];
+							pushRow(row.split(delim));
+							doStep();
+							if (aborted)
+								return returnable();
+						}
+						else
+							pushRow(row.split(delim));
+						if (preview && i >= preview)
+						{
+							data = data.slice(0, preview);
+							return returnable(true);
+						}
+					}
+					return returnable();
+				}
+
+				var nextDelim = input.indexOf(delim, cursor);
+				var nextNewline = input.indexOf(newline, cursor);
+
+				// Parser loop
+				for (;;)
+				{
+					// Field has opening quote
+					if (input[cursor] == '"')
+					{
+						// Start our search for the closing quote where the cursor is
+						var quoteSearch = cursor;
+
+						// Skip the opening quote
+						cursor++;
+
+						for (;;)
+						{
+							// Find closing quote
+							var quoteSearch = input.indexOf('"', quoteSearch+1);
+
+							if (quoteSearch === -1)
+							{
+								if (!ignoreLastRow) {
+									// No closing quote... what a pity
+									errors.push({
+										type: "Quotes",
+										code: "MissingQuotes",
+										message: "Quoted field unterminated",
+										row: data.length,	// row has yet to be inserted
+										index: cursor
+									});
+								}
+								return finish();
+							}
+
+							if (quoteSearch === inputLen-1)
+							{
+								// Closing quote at EOF
+								var value = input.substring(cursor, quoteSearch).replace(/""/g, '"');
+								return finish(value);
+							}
+
+							// If this quote is escaped, it's part of the data; skip it
+							if (input[quoteSearch+1] == '"')
+							{
+								quoteSearch++;
+								continue;
+							}
+
+							if (input[quoteSearch+1] == delim)
+							{
+								// Closing quote followed by delimiter
+								row.push(input.substring(cursor, quoteSearch).replace(/""/g, '"'));
+								cursor = quoteSearch + 1 + delimLen;
+								nextDelim = input.indexOf(delim, cursor);
+								nextNewline = input.indexOf(newline, cursor);
+								break;
+							}
+
+							if (input.substr(quoteSearch+1, newlineLen) === newline)
+							{
+								// Closing quote followed by newline
+								row.push(input.substring(cursor, quoteSearch).replace(/""/g, '"'));
+								saveRow(quoteSearch + 1 + newlineLen);
+								nextDelim = input.indexOf(delim, cursor);	// because we may have skipped the nextDelim in the quoted field
+
+								if (stepIsFunction)
+								{
+									doStep();
+									if (aborted)
+										return returnable();
+								}
+								
+								if (preview && data.length >= preview)
+									return returnable(true);
+
+								break;
+							}
+						}
+
+						continue;
+					}
+
+					// Comment found at start of new line
+					if (comments && row.length === 0 && input.substr(cursor, commentsLen) === comments)
+					{
+						if (nextNewline == -1)	// Comment ends at EOF
+							return returnable();
+						cursor = nextNewline + newlineLen;
+						nextNewline = input.indexOf(newline, cursor);
+						nextDelim = input.indexOf(delim, cursor);
+						continue;
+					}
+
+					// Next delimiter comes before next newline, so we've reached end of field
+					if (nextDelim !== -1 && (nextDelim < nextNewline || nextNewline === -1))
+					{
+						row.push(input.substring(cursor, nextDelim));
+						cursor = nextDelim + delimLen;
+						nextDelim = input.indexOf(delim, cursor);
+						continue;
+					}
+
+					// End of row
+					if (nextNewline !== -1)
+					{
+						row.push(input.substring(cursor, nextNewline));
+						saveRow(nextNewline + newlineLen);
+
+						if (stepIsFunction)
+						{
+							doStep();
+							if (aborted)
+								return returnable();
+						}
+
+						if (preview && data.length >= preview)
+							return returnable(true);
+
+						continue;
+					}
+
+					break;
+				}
+
+
+				return finish();
+
+
+				function pushRow(row)
+				{
+					data.push(row);
+					lastCursor = cursor;
+				}
+
+				/**
+				 * Appends the remaining input from cursor to the end into
+				 * row, saves the row, calls step, and returns the results.
+				 */
+				function finish(value)
+				{
+					if (ignoreLastRow)
+						return returnable();
+					if (typeof value === 'undefined')
+						value = input.substr(cursor);
+					row.push(value);
+					cursor = inputLen;	// important in case parsing is paused
+					pushRow(row);
+					if (stepIsFunction)
+						doStep();
+					return returnable();
+				}
+
+				/**
+				 * Appends the current row to the results. It sets the cursor
+				 * to newCursor and finds the nextNewline. The caller should
+				 * take care to execute user's step function and check for
+				 * preview and end parsing if necessary.
+				 */
+				function saveRow(newCursor)
+				{
+					cursor = newCursor;
+					pushRow(row);
+					row = [];
+					nextNewline = input.indexOf(newline, cursor);
+				}
+
+				/** Returns an object with the results, errors, and meta. */
+				function returnable(stopped)
+				{
+					return {
+						data: data,
+						errors: errors,
+						meta: {
+							delimiter: delim,
+							linebreak: newline,
+							aborted: aborted,
+							truncated: !!stopped,
+							cursor: lastCursor + (baseIndex || 0)
+						}
+					};
+				}
+
+				/** Executes the user's step function and resets data & errors. */
+				function doStep()
+				{
+					step(returnable());
+					data = [], errors = [];
+				}
+			};
+
+			/** Sets the abort flag */
+			this.abort = function()
+			{
+				aborted = true;
+			};
+
+			/** Gets the cursor position */
+			this.getCharIndex = function()
+			{
+				return cursor;
+			};
+		}
+
+
+		// If you need to load Papa Parse asynchronously and you also need worker threads, hard-code
+		// the script path here. See: https://github.com/mholt/PapaParse/issues/87#issuecomment-57885358
+		function getScriptPath()
+		{
+			var scripts = document.getElementsByTagName('script');
+			return scripts.length ? scripts[scripts.length - 1].src : '';
+		}
+
+		function newWorker()
+		{
+			if (!Papa.WORKERS_SUPPORTED)
+				return false;
+			if (!LOADED_SYNC && Papa.SCRIPT_PATH === null)
+				throw new Error(
+					'Script path cannot be determined automatically when Papa Parse is loaded asynchronously. ' +
+					'You need to set Papa.SCRIPT_PATH manually.'
+				);
+			var workerUrl = Papa.SCRIPT_PATH || AUTO_SCRIPT_PATH;
+			// Append "papaworker" to the search string to tell papaparse that this is our worker.
+			workerUrl += (workerUrl.indexOf('?') !== -1 ? '&' : '?') + 'papaworker';
+			var w = new global.Worker(workerUrl);
+			w.onmessage = mainThreadReceivedMessage;
+			w.id = workerIdCounter++;
+			workers[w.id] = w;
+			return w;
+		}
+
+		/** Callback when main thread receives a message */
+		function mainThreadReceivedMessage(e)
+		{
+			var msg = e.data;
+			var worker = workers[msg.workerId];
+			var aborted = false;
+
+			if (msg.error)
+				worker.userError(msg.error, msg.file);
+			else if (msg.results && msg.results.data)
+			{
+				var abort = function() {
+					aborted = true;
+					completeWorker(msg.workerId, { data: [], errors: [], meta: { aborted: true } });
+				};
+
+				var handle = {
+					abort: abort,
+					pause: notImplemented,
+					resume: notImplemented
+				};
+
+				if (isFunction(worker.userStep))
+				{
+					for (var i = 0; i < msg.results.data.length; i++)
+					{
+						worker.userStep({
+							data: [msg.results.data[i]],
+							errors: msg.results.errors,
+							meta: msg.results.meta
+						}, handle);
+						if (aborted)
+							break;
+					}
+					delete msg.results;	// free memory ASAP
+				}
+				else if (isFunction(worker.userChunk))
+				{
+					worker.userChunk(msg.results, handle, msg.file);
+					delete msg.results;
+				}
+			}
+
+			if (msg.finished && !aborted)
+				completeWorker(msg.workerId, msg.results);
+		}
+
+		function completeWorker(workerId, results) {
+			var worker = workers[workerId];
+			if (isFunction(worker.userComplete))
+				worker.userComplete(results);
+			worker.terminate();
+			delete workers[workerId];
+		}
+
+		function notImplemented() {
+			throw "Not implemented.";
+		}
+
+		/** Callback when worker thread receives a message */
+		function workerThreadReceivedMessage(e)
+		{
+			var msg = e.data;
+
+			if (typeof Papa.WORKER_ID === 'undefined' && msg)
+				Papa.WORKER_ID = msg.workerId;
+
+			if (typeof msg.input === 'string')
+			{
+				global.postMessage({
+					workerId: Papa.WORKER_ID,
+					results: Papa.parse(msg.input, msg.config),
+					finished: true
+				});
+			}
+			else if ((global.File && msg.input instanceof File) || msg.input instanceof Object)	// thank you, Safari (see issue #106)
+			{
+				var results = Papa.parse(msg.input, msg.config);
+				if (results)
+					global.postMessage({
+						workerId: Papa.WORKER_ID,
+						results: results,
+						finished: true
+					});
+			}
+		}
+
+		/** Makes a deep copy of an array or object (mostly) */
+		function copy(obj)
+		{
+			if (typeof obj !== 'object')
+				return obj;
+			var cpy = obj instanceof Array ? [] : {};
+			for (var key in obj)
+				cpy[key] = copy(obj[key]);
+			return cpy;
+		}
+
+		function bindFunction(f, self)
+		{
+			return function() { f.apply(self, arguments); };
+		}
+
+		function isFunction(func)
+		{
+			return typeof func === 'function';
+		}
+	})(typeof window !== 'undefined' ? window : this);
+
+
+/***/ },
+/* 24 */
+/***/ function(module, exports, __webpack_require__) {
+
 	'use strict';
 
 	var CC = __webpack_require__(1);
@@ -3337,10 +6457,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var newParts=[];
 	        for (var j=0; j<parts.length; j++) {
 	            var part=parts[j];
+	            var comment=part.replace(/^([^$]*\$|.*)/, '');
+	            part = part.replace(/\$.*/, '');
+
 	            if (~part.indexOf('-')) { // there are ranges ... we are in trouble !
-	                newParts=newParts.concat(processRange(part));
+	                newParts=newParts.concat(processRange(part,comment));
 	            } else {
-	                newParts.push(part);
+	                newParts.push(parts[j]); // the part with the comments !
 	            }
 	        }
 	        keys[i]=newParts;
@@ -3447,7 +6570,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    results.push(result);
 	}
 
-	function processRange(string) {
+	function processRange(string, comment) {
 	    var results=[];
 	    var parts=string.split(/([0-9]+-[0-9]+)/).filter(function(value) { if (value) return value });
 	    var position=-1;
@@ -3474,7 +6597,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var position = 0;
 	    while (position < currents.length) {
 	        if (currents[position] < mfs[position].max) {
-	            results.push(getMF(mfs, currents));
+	            results.push(getMF(mfs, currents, comment));
 	            currents[position]++;
 	            for (var i = 0; i < position; i++) {
 	                currents[i] = mfs[i].min;
@@ -3484,11 +6607,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	            position++;
 	        }
 	    }
-	    results.push(getMF(mfs, currents));
+	    results.push(getMF(mfs, currents, comment));
 	    return results;
 	}
 
-	function getMF(mfs, currents) {
+	function getMF(mfs, currents, comment) {
 	    var mf="";
 	    for (var i=0; i<mfs.length; i++) {
 	        if (currents[i]!=0) {
@@ -3498,13 +6621,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        }
 	    }
+	    if (comment) mf+="$"+comment;
 	    return mf;
 	}
 
 
 
 /***/ },
-/* 16 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3551,13 +6675,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 17 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var CC = __webpack_require__(1);
-	var SimilarityProcessor = __webpack_require__(16);
+	var SimilarityProcessor = __webpack_require__(25);
 	var Stat = __webpack_require__(12).array;
 
 	/*
@@ -3612,7 +6736,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 18 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3745,12 +6869,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 19 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var WorkerManager = __webpack_require__(20);
+	var WorkerManager = __webpack_require__(29);
 
 	var bestResults = __webpack_require__(9);
 
@@ -3837,12 +6961,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 20 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var workerTemplate = __webpack_require__(21);
+	var workerTemplate = __webpack_require__(30);
 
 	var CORES = navigator.hardwareConcurrency || 1;
 
@@ -3995,7 +7119,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 21 */
+/* 30 */
 /***/ function(module, exports) {
 
 	'use strict';
