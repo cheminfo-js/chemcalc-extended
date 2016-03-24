@@ -6,6 +6,11 @@ var PEP = require('peptide');
 var bestResults = exports.bestResults = require('./bestResults');
 var MFProcessor = exports.MFProcessor = require('./MFProcessor');
 
+
+
+exports.getContaminantReference = require('./getContaminantReference');
+
+
 exports.combineMFs = require('./combineMFs');
 exports.SimilarityProcessor = require('./SimilarityProcessor');
 exports.MFSimilarityProcessor = require('./MFSimilarityProcessor');
@@ -119,25 +124,14 @@ CE.getEutrophicationPotential = function (mf) {
 };
 
 
-CE.convertAASequence = function (sequence) {
-    return PEP.convertAASequence(sequence);
-}
+CE.convertAASequence = PEP.convertAASequence;
 
-CE.chargePeptide = function (sequence, options) {
-    return PEP.chargePeptide(sequence, options);
-}
+CE.chargePeptide = PEP.chargePeptide;
 
+CE.generatePeptideFragments = PEP.generatePeptideFragments;
 
-CE.generatePeptideFragments = function (sequence, options) {
-    return PEP.generatePeptideFragments(sequence, options);
-}
+CE.splitPeptide = PEP.splitPeptide;
 
-CE.splitPeptide = function (sequence) {
-    return PEP.splitPeptide(sequence);
-}
-
-CE.digestPeptide = function (sequence, options) {
-    return PEP.digestPeptide(sequence, options);
-}
+CE.digestPeptide = PEP.digestPeptide;
 
 CE.massPeakPicking = massPeakPicking;

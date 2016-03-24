@@ -37,10 +37,13 @@
     "should": "^7.0.2"
   },
   "dependencies": {
+    "babyparse": "^0.4.5",
     "chemcalc": "^3.0.6",
     "ml-stat": "^1.0.1",
     "peaks-similarity": "^2.0.1",
     "peptide": "^1.4.2",
+    "superagent": "^1.8.2",
+    "superagent-promise": "^1.1.0",
     "web-worker-manager": "^0.1.0"
   }
 }

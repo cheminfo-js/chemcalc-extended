@@ -190,7 +190,6 @@ function getMF(mfs, currents, comment) {
             }
         }
     }
-    console.log(comment);
     if (comment) mf+="$"+comment;
     return mf;
 }
