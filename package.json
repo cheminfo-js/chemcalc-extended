@@ -37,7 +37,7 @@
     "should": "^7.0.2"
   },
   "dependencies": {
-    "babyparse": "^0.4.5",
+    "papaparse": "^4.1.2",
     "chemcalc": "^3.0.6",
     "ml-stat": "^1.0.1",
     "peaks-similarity": "^2.0.1",
