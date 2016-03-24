@@ -188,12 +188,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return PEP.generatePeptideFragments(sequence, options);
 	}
 
-	CE.generatePeptideFragments = function (sequence, options) {
-	    return PEP.generatePeptideFragments(sequence, options);
-	}
-
-	CE.splitPeptide = function (sequence, options) {
-	    return PEP.splitPeptide(sequence, options);
+	CE.splitPeptide = function (sequence) {
+	    return PEP.splitPeptide(sequence);
 	}
 
 	CE.digestPeptide = function (sequence, options) {
@@ -1513,6 +1509,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	// SOURCE: https://en.wikipedia.org/wiki/Amino_acid
 
 	function chargePeptide(mf, options) {
+	    if (Array.isArray(mf)) {
+	        for (var i=0; i<mf.length; i++) {
+	            mf[i]=chargeOnePeptide(mf[i], options);
+	        }
+	        return mf;
+	    } else {
+	        return chargeOnePeptide(mf, options);
+	    }
+	}
+
+	function chargeOnePeptide(mf, options) {
 	    var options=options || {};
 	    if (options.pH === undefined) options.pH=0;
 	    var pH=options.pH;
@@ -1615,6 +1622,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var splitSequence=__webpack_require__(7);
 
+
+	/*
+	Iotuibs:
+	* minMissed (default: 0)
+	* maxMissed (default: 0)
+	* minResidue: 0;
+	* maxResidue: infinity
+	* enzyme: chymotrypsin, trypsin, glucph4, glucph8, thermolysin, cyanogenbromide : Mandatory, no default value !
+	 */
+
 	function digestSequence(sequence, options) {
 	    var options=options || {};
 
@@ -1629,11 +1646,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var fragments=sequence.replace(regexp,"$1 ").split(/ /);
 	    if (!fragments[fragments.length-1]) fragments=fragments.slice(0, fragments.length-1);
 
+	    var from=0;
 	    for (var i=0; i<fragments.length; i++) {
+	        var nbResidue=splitSequence(fragments[i]).length;
 	        fragments[i]={
 	            sequence:fragments[i],
-	            nbResidue:splitSequence(fragments[i]).length
+	            nbResidue:nbResidue,
+	            from:from+1,
+	            to:from+nbResidue
 	        }
+	        from+=nbResidue;
 	    }
 
 
@@ -1645,10 +1667,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var nbResidue=0;
 	            for (var k=i; k<=(i+j); k++) {
 	                fragment+=fragments[k].sequence;
-	                nbResidue+=fragments[k].nbResidue
+	                nbResidue+=fragments[k].nbResidue;
 	            }
+	            var from=fragments[i].from;
+	            var to=fragments[i+j].to;
 	            if (fragment && nbResidue>=options.minResidue && nbResidue<=options.maxResidue) {
-	                results.push("H"+fragment+"OH");
+	                results.push("H"+fragment+"OH"+"$D"+from+">"+to);
 	            }
 	        }
 	    }
