@@ -3,7 +3,7 @@
 var CE = require('..');
 
 
-describe('Test getContaminantReference', function () {
+describe('Test getContaminantsReferenceList', function () {
     it('Check the json', function () {
         this.timeout(20000);
         return CE.getContaminantsReferenceList().then(function(result) {
