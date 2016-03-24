@@ -1,5 +1,5 @@
 var request = require('superagent-promise')(require('superagent'), Promise);
-var Papa = require('babyparse');
+var Papa = require('papaparse');
 var CCE = require('.');
 
 
