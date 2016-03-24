@@ -1,7 +1,7 @@
 var request = require('superagent-promise')(require('superagent'), Promise);
 var Papa = require('papaparse');
 var CC = require('chemcalc');
-var combineMF = require('./combineMF');
+var combineMFs = require('./combineMFs');
 
 function getContaminantsReferenceList() {
 
@@ -49,7 +49,7 @@ function getContaminantsReferenceList() {
             }
 
             // we need to calculate all the possibilities
-            var mfs=CCE.combineMFs([contaminant.mf, contaminant.modif]);
+            var mfs=combineMFs([contaminant.mf, contaminant.modif]);
             for (var mf of mfs) {
                 mf.info=contaminant;
                 mf.ESI = contaminant.ESI==='X' ? true : false;
@@ -57,7 +57,7 @@ function getContaminantsReferenceList() {
                 mf.positive = contaminant.positive==='X' ? true : false;
                 mf.negative = contaminant.negative==='X' ? true : false;
                 mf.similarity='';
-                mf.mf=CCE.analyseMF(mf.mf).mf;
+                mf.mf=CC.analyseMF(mf.mf).mf;
                 results.push(mf)
             }
         }
