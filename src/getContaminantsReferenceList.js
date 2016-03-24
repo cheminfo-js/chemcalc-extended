@@ -3,7 +3,7 @@ var Papa = require('babyparse');
 var CCE = require('.');
 
 
-function getContaminantReference() {
+function getContaminantsReferenceList() {
 
     return Promise.all([
         request.get('https://googledocs.cheminfo.org/spreadsheets/d/1LrJCl9-xSZKhGA9Y8nKVkYwB-mEOHBkTXg5qYXeFpZY/export?format=tsv').end(),
@@ -61,7 +61,6 @@ function getContaminantReference() {
                 results.push(mf)
             }
         }
-        console.log("done parse")
         return results;
     }
 
@@ -70,7 +69,7 @@ function getContaminantReference() {
 
 }
 
-module.exports = getContaminantReference;
+module.exports = getContaminantsReferenceList;
 
 
 

@@ -8,7 +8,7 @@ var MFProcessor = exports.MFProcessor = require('./MFProcessor');
 
 
 
-exports.getContaminantReference = require('./getContaminantReference');
+exports.getContaminantsReferenceList = require('./getContaminantsReferenceList');
 
 
 exports.combineMFs = require('./combineMFs');
