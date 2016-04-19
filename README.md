@@ -45,7 +45,7 @@ matchMFs(mfs, experimental, options)
   * bestOf : keep only the best result in the defined range of mass. By default, 0 = not used
   * maxResults : keep only the best similarity. This process is done after "bestOf". By default: 500
   * minSimilarity : minimal similarity value (between 0 and 1). By default: 50
-  * common : only consider the common part for similarity calculation based on the widthBottom value
+  * common : only consider the common part for similarity calculation based on the widthBottom value (Default: '', possible values: '', 'first', 'second', 'both')
 
 ### combineMFs(array)
 
