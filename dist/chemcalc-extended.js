@@ -64,16 +64,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 
-	exports.getContaminantsReferenceList = __webpack_require__(15);
+	exports.getContaminantsReferenceList = __webpack_require__(16);
 
 
-	exports.combineMFs = __webpack_require__(24);
-	exports.SimilarityProcessor = __webpack_require__(25);
-	exports.MFSimilarityProcessor = __webpack_require__(26);
-	var massPeakPicking = __webpack_require__(27);
+	exports.combineMFs = __webpack_require__(25);
+	exports.SimilarityProcessor = __webpack_require__(26);
+	exports.MFSimilarityProcessor = __webpack_require__(27);
+	var massPeakPicking = __webpack_require__(28);
 
 	if (typeof self !== 'undefined') {
-	    exports.MFProcessorWorker = __webpack_require__(28);
+	    exports.MFProcessorWorker = __webpack_require__(29);
 	}
 
 	var CE = exports;
@@ -1759,12 +1759,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
+
+	var initSimilarity=__webpack_require__(11).initSimilarity;
+
 	var CC = __webpack_require__(1);
-	var Similarity = __webpack_require__(11);
+
 
 	function MFProcessor(experimental, options) {
-	    // we will copy the options to be sure ...
-	    this.options=Object.create(options || {});
+	    initSimilarity(this, options);
+	    
+
 	    this.options.isotopomers = 'arrayXXYY';
 	    // init with options ans experimental spectrum
 	    this.options.zone = this.options.zone || {};
@@ -1774,21 +1778,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (this.options.decimalsMass) this.factorMass = Math.pow(10, this.options.decimalsMass);
 	    if (this.options.decimalsPPM) this.factorPPM = Math.pow(10, this.options.decimalsPPM);
 
-	    this.widthFunction=undefined;
-	    if (this.options.widthFunction) {
-	         this.widthFunction = new Function('mass', 'charge',
-	            this.options.widthFunction + ";"+
-	            "return {widthBottom: widthBottom, widthTop: widthTop};"
-	         );
-
-	    }
-
-
-	    this.similarity = new Similarity({
-	        widthTop: this.options.widthTop,
-	        widthBottom: this.options.widthBottom,
-	        common: this.options.common
-	    });
 	    this.similarity.setPeaks1(experimental);
 	}
 
@@ -1852,12 +1841,43 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
+	var Similarity = __webpack_require__(12);
+
+	module.exports.initSimilarity= function(context, options) {
+	    // we will copy the options to be sure ...
+	    context.options=Object.create(options || {});
+	    context.widthFunction=undefined;
+	    if (context.options.widthFunction) {
+	        // we will create a function
+	        var theFunction=[];
+	        if (context.options.widthBottom) theFunction.push("var widthBottom="+context.context.widthBottom+";");
+	        if (context.options.widthTop) theFunction.push("var widthTop="+context.context.widthTop+";");
+	        theFunction.push(context.options.widthFunction);
+	        theFunction.push(";");
+	        theFunction.push("return {widthBottom: widthBottom, widthTop: widthTop};");
+	        context.widthFunction = new Function('mass', 'charge', theFunction.join("\r\n"));
+	    }
+
+	    context.similarity = new Similarity({
+	        widthTop: context.options.widthTop,
+	        widthBottom: context.options.widthBottom,
+	        common: context.options.common
+	    });
+	};
+
+
+/***/ },
+/* 12 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
 	var COMMON_NO=0;
 	var COMMON_FIRST=1;
 	var COMMON_SECOND=2;
 	var COMMON_BOTH=3; // should be a binary operation !
 
-	var Stat = __webpack_require__(12).array;
+	var Stat = __webpack_require__(13).array;
 
 
 	module.exports = function Comparator(options) {
@@ -2305,17 +2325,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	exports.array = __webpack_require__(13);
-	exports.matrix = __webpack_require__(14);
+	exports.array = __webpack_require__(14);
+	exports.matrix = __webpack_require__(15);
 
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -2774,11 +2794,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var arrayStat = __webpack_require__(13);
+	var arrayStat = __webpack_require__(14);
 
 	// https://github.com/accord-net/framework/blob/development/Sources/Accord.Statistics/Tools.cs
 
@@ -3300,13 +3320,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var request = __webpack_require__(16)(__webpack_require__(17), Promise);
-	var Papa = __webpack_require__(23);
+	var request = __webpack_require__(17)(__webpack_require__(18), Promise);
+	var Papa = __webpack_require__(24);
 	var CC = __webpack_require__(1);
-	var combineMFs = __webpack_require__(24);
+	var combineMFs = __webpack_require__(25);
 
 	function getContaminantsReferenceList() {
 
@@ -3381,7 +3401,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports) {
 
 	/**
@@ -3509,17 +3529,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Module dependencies.
 	 */
 
-	var Emitter = __webpack_require__(18);
-	var reduce = __webpack_require__(19);
-	var requestBase = __webpack_require__(20);
-	var isObject = __webpack_require__(21);
+	var Emitter = __webpack_require__(19);
+	var reduce = __webpack_require__(20);
+	var requestBase = __webpack_require__(21);
+	var isObject = __webpack_require__(22);
 
 	/**
 	 * Root reference for iframes.
@@ -3568,7 +3588,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Expose `request`.
 	 */
 
-	var request = module.exports = __webpack_require__(22).bind(null, Request);
+	var request = module.exports = __webpack_require__(23).bind(null, Request);
 
 	/**
 	 * Determine XHR.
@@ -4592,7 +4612,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 18 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -4761,7 +4781,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 19 */
+/* 20 */
 /***/ function(module, exports) {
 
 	
@@ -4790,13 +4810,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 20 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Module of mixed-in functions shared between node and client code
 	 */
-	var isObject = __webpack_require__(21);
+	var isObject = __webpack_require__(22);
 
 	/**
 	 * Clear previous timeout.
@@ -4962,7 +4982,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 21 */
+/* 22 */
 /***/ function(module, exports) {
 
 	/**
@@ -4981,7 +5001,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 22 */
+/* 23 */
 /***/ function(module, exports) {
 
 	// The node and browser modules expose versions of this with the
@@ -5019,7 +5039,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 23 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -6428,7 +6448,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 24 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -6630,10 +6650,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 25 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
+
+	var initSimilarity=__webpack_require__(11).initSimilarity;
 
 
 	/*
@@ -6641,30 +6663,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 
-	var Similarity = __webpack_require__(11);
 
 	function SimilarityProcessor(experimental, options) {
-	    // we will copy the options to be sure ...
-	    this.options=Object.create(options || {});
+	    initSimilarity(this, options);
 
-	    this.widthFunction=undefined;
-	    if (this.options.widthFunction) {
-	        // we will create a function
-	        var theFunction="";
-	        if (this.options.widthBottom) theFunction+="var widthBottm="+widthBottm+";";
-	        if (this.options.widthTop) theFunction+="var widthTop="+widthTop+";";
-	        theFunction+=this.options.widthFunction;
-	        theFunction+=";"
-	        theFunction+="return {widthBottom: widthBottom, widthTop: widthTop};";
 
-	         this.widthFunction = new Function('mass', 'charge', theFunction);
-	    }
-
-	    this.similarity = new Similarity({
-	        widthTop: this.options.widthTop,
-	        widthBottom: this.options.widthBottom,
-	        common: this.options.common
-	    });
 	    this.similarity.setPeaks1(experimental);
 	}
 
@@ -6682,14 +6685,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 26 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var CC = __webpack_require__(1);
-	var SimilarityProcessor = __webpack_require__(25);
-	var Stat = __webpack_require__(12).array;
+	var SimilarityProcessor = __webpack_require__(26);
+	var Stat = __webpack_require__(13).array;
 
 	/*
 
@@ -6743,12 +6746,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 27 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Stat=__webpack_require__(12);
+	var Stat=__webpack_require__(13);
 
 	module.exports=massPeakPicking;
 
@@ -6876,12 +6879,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 28 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var WorkerManager = __webpack_require__(29);
+	var WorkerManager = __webpack_require__(30);
 
 	var bestResults = __webpack_require__(9);
 
@@ -6968,12 +6971,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 29 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var workerTemplate = __webpack_require__(30);
+	var workerTemplate = __webpack_require__(31);
 
 	var CORES = navigator.hardwareConcurrency || 1;
 
@@ -7126,7 +7129,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 30 */
+/* 31 */
 /***/ function(module, exports) {
 
 	'use strict';
