@@ -6,6 +6,7 @@ var removeMFLastPart = require('../../src/util/removeMfLastPart.js');
 describe('removeMfLastPart test', function () {
     it('Should yield the correct results', function () {
         removeMFLastPart("CK").should.equal("C");
+        removeMFLastPart("NaK").should.equal("Na");
         removeMFLastPart("C10H").should.equal("C10");
         removeMFLastPart("C10H2O").should.equal("C10H2");
         removeMFLastPart("(CH3)2N").should.equal("(CH3)2");

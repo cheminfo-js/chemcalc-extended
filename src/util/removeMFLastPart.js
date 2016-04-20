@@ -11,7 +11,9 @@ module.exports = function(mf) {
         var ascii=mf.charCodeAt(i);
         
         if (ascii>96 && ascii<123) { // lowercase
-
+            if (! start && ! parenthesis) {
+                return mf.substr(0, i+1);
+            }
         } else if (ascii>64 && ascii<91) { // uppercase
             if (! start && ! parenthesis) {
                 return mf.substr(0, i+1);
