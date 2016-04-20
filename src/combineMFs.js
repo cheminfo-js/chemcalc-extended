@@ -1,7 +1,7 @@
 'use strict';
 
 var CC = require('chemcalc');
-
+var removeMFLastPart = require('./util/removeMFLastPart.js');
 
 // TODO replace from the value coming from chemcalc
 var ELECTRON_MASS=5.4857990946e-4;
@@ -184,7 +184,10 @@ function processRange(string, comment) {
 function getMF(mfs, currents, comment) {
     var mf="";
     for (var i=0; i<mfs.length; i++) {
-        if (currents[i]!=0) {
+        if (currents[i]===0) {
+            // TODO we need to remove from currents[i] till we reach another part of the MF
+            mf+=removeMFLastPart(mfs[i].mf);
+        } else {
             mf+=mfs[i].mf;
             if (currents[i]!==1) {
                 mf+=currents[i];
@@ -194,4 +197,5 @@ function getMF(mfs, currents, comment) {
     if (comment) mf+="$"+comment;
     return mf;
 }
+
 
