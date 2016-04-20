@@ -23,6 +23,43 @@ describe('combine MFs test', function () {
     });
 
 
+    it('From array of string with some range and non range', function () {
+        var mfsArray=['CN0-2'];
+        var result=CE.combineMFs(mfsArray);
+        console.log(result);
+        result[0].mf.should.equal('C');
+        result[1].mf.should.equal('CN');
+        result[2].mf.should.equal('CN2');
+        result.length.should.equal(3);
+    });
+
+    it('From array of string with some range and non range', function () {
+        var mfsArray=['CN0-2O00-1K'];
+        var result=CE.combineMFs(mfsArray);
+        console.log(result);
+        result[0].mf.should.equal('CK');
+        result[1].mf.should.equal('CNK');
+        result[2].mf.should.equal('CN2K');
+        result[3].mf.should.equal('COK');
+        result[4].mf.should.equal('CNOK');
+        result[5].mf.should.equal('CN2OK');
+        result.length.should.equal(6);
+    });
+
+    it('From array of string with some range and non range', function () {
+        var mfsArray=['C(Me(N2))0-2(CH3)00-1K'];
+        var result=CE.combineMFs(mfsArray);
+        console.log(result);
+        result[0].mf.should.equal('CK');
+        result[1].mf.should.equal('C(Me(N2))K');
+        result[2].mf.should.equal('C(Me(N2))2K');
+        result[3].mf.should.equal('COK');
+        result[4].mf.should.equal('C(Me(N2))(CH3)K');
+        result[5].mf.should.equal('C(Me(N2))2(CH3)K');
+        result.length.should.equal(6);
+    });
+
+
     it('From array of string with some range', function () {
         var mfsArray=["C1-3N0-2Cl0-0BrO1-1.C2-3H3-4",['C','O']];
         var result=CE.combineMFs(mfsArray);

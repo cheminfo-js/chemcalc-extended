@@ -12,7 +12,7 @@ function combineMFs (keys, options) {
     if (!Array.isArray(keys)) return [];
 
 
-    // we allow String delimited by "." instead of an array
+    // we allow String delimited by ". , or ;" instead of an array
     for (var i = 0; i < keys.length; i++) {
         if (!Array.isArray(keys[i])) {
             keys[i] = keys[i].split(/[\.,;]/);
@@ -21,6 +21,7 @@ function combineMFs (keys, options) {
 
 
     // we allow ranges in a string ...
+    // problem with ranges is that we need to now to what the range applies
     for (var i = 0; i < keys.length; i++) {
         var parts=keys[i];
         var newParts=[];
