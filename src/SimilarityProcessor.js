@@ -14,10 +14,15 @@ function SimilarityProcessor(experimental, options) {
 
     this.widthFunction=undefined;
     if (this.options.widthFunction) {
-         this.widthFunction = new Function('mass', 'charge',
-            this.options.widthFunction + ";"+
-            "return {widthBottom: widthBottom, widthTop: widthTop};"
-         );
+        // we will create a function
+        var theFunction="";
+        if (this.options.widthBottom) theFunction+="var widthBottm="+widthBottm+";";
+        if (this.options.widthTop) theFunction+="var widthTop="+widthTop+";";
+        theFunction+=this.options.widthFunction;
+        theFunction+=";"
+        theFunction+="return {widthBottom: widthBottom, widthTop: widthTop};";
+
+         this.widthFunction = new Function('mass', 'charge', theFunction);
     }
 
     this.similarity = new Similarity({
