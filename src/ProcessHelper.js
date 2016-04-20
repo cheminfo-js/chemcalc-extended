@@ -9,8 +9,8 @@ module.exports.initSimilarity= function(context, options) {
     if (context.options.widthFunction) {
         // we will create a function
         var theFunction=[];
-        if (context.options.widthBottom) theFunction.push("var widthBottm="+widthBottm+";");
-        if (context.options.widthTop) theFunction.push("var widthTop="+widthTop+";");
+        if (context.options.widthBottom) theFunction.push("var widthBottom="+context.context.widthBottom+";");
+        if (context.options.widthTop) theFunction.push("var widthTop="+context.context.widthTop+";");
         theFunction.push(context.options.widthFunction);
         theFunction.push(";");
         theFunction.push("return {widthBottom: widthBottom, widthTop: widthTop};");
