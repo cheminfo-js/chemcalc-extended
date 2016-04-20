@@ -47,13 +47,12 @@ describe('combine MFs test', function () {
     });
 
     it('From array of string with some range and non range', function () {
-        var mfsArray=['C(Me(N2))0-2(CH3)00-1K'];
+        var mfsArray=['C(Me(N2))0-2(CH3)0-1K'];
         var result=CE.combineMFs(mfsArray);
-        console.log(result);
         result[0].mf.should.equal('CK');
         result[1].mf.should.equal('C(Me(N2))K');
         result[2].mf.should.equal('C(Me(N2))2K');
-        result[3].mf.should.equal('COK');
+        result[3].mf.should.equal('C(CH3)K');
         result[4].mf.should.equal('C(Me(N2))(CH3)K');
         result[5].mf.should.equal('C(Me(N2))2(CH3)K');
         result.length.should.equal(6);
