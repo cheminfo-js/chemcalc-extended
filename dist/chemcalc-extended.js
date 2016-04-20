@@ -4593,14 +4593,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 18 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	
 	/**
 	 * Expose `Emitter`.
 	 */
 
-	module.exports = Emitter;
+	if (true) {
+	  module.exports = Emitter;
+	}
 
 	/**
 	 * Initialize a new `Emitter`.
@@ -6647,10 +6649,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    this.widthFunction=undefined;
 	    if (this.options.widthFunction) {
-	         this.widthFunction = new Function('mass', 'charge',
-	            this.options.widthFunction + ";"+
-	            "return {widthBottom: widthBottom, widthTop: widthTop};"
-	         );
+	        // we will create a function
+	        var theFunction="";
+	        if (this.options.widthBottom) theFunction+="var widthBottm="+widthBottm+";";
+	        if (this.options.widthTop) theFunction+="var widthTop="+widthTop+";";
+	        theFunction+=this.options.widthFunction;
+	        theFunction+=";"
+	        theFunction+="return {widthBottom: widthBottom, widthTop: widthTop};";
+
+	         this.widthFunction = new Function('mass', 'charge', theFunction);
 	    }
 
 	    this.similarity = new Similarity({
