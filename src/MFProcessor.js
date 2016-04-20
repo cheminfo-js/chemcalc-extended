@@ -1,11 +1,15 @@
 'use strict';
 
+
+var initSimilarity=require('./ProcessHelper.js').initSimilarity;
+
 var CC = require('chemcalc');
-var Similarity = require('peaks-similarity');
+
 
 function MFProcessor(experimental, options) {
-    // we will copy the options to be sure ...
-    this.options=Object.create(options || {});
+    initSimilarity(this, options);
+    
+
     this.options.isotopomers = 'arrayXXYY';
     // init with options ans experimental spectrum
     this.options.zone = this.options.zone || {};
@@ -15,21 +19,6 @@ function MFProcessor(experimental, options) {
     if (this.options.decimalsMass) this.factorMass = Math.pow(10, this.options.decimalsMass);
     if (this.options.decimalsPPM) this.factorPPM = Math.pow(10, this.options.decimalsPPM);
 
-    this.widthFunction=undefined;
-    if (this.options.widthFunction) {
-         this.widthFunction = new Function('mass', 'charge',
-            this.options.widthFunction + ";"+
-            "return {widthBottom: widthBottom, widthTop: widthTop};"
-         );
-
-    }
-
-
-    this.similarity = new Similarity({
-        widthTop: this.options.widthTop,
-        widthBottom: this.options.widthBottom,
-        common: this.options.common
-    });
     this.similarity.setPeaks1(experimental);
 }
 
