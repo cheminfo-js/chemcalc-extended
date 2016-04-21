@@ -6485,12 +6485,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	var CC = __webpack_require__(1);
 	var removeMFLastPart = __webpack_require__(27);
 
+
 	// TODO replace from the value coming from chemcalc
 	var ELECTRON_MASS=5.4857990946e-4;
 
 	function combineMFs (keys, options) {
 	    var options=options || {};
-
+	    options.limit=options.limit || 100000;
 	    if (!Array.isArray(keys)) return [];
 
 
@@ -6500,7 +6501,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	            keys[i] = keys[i].split(/[\.,;]/);
 	        }
 	    }
-
 
 	    // we allow ranges in a string ...
 	    // problem with ranges is that we need to now to what the range applies
@@ -6542,6 +6542,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            position = 0;
 	        } else {
 	            position++;
+	        }
+	        if (evolution>options.limit) {
+	            throw new Error('You have reached the limit of '+options.limit+'. You could still change this value using options.limit but it is likely to crash.');
 	        }
 	    }
 	    appendResult(results, currents, keys);
