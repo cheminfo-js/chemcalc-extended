@@ -62,7 +62,7 @@ function combineMFs (keys, options) {
             position++;
         }
         if (evolution>options.limit) {
-            throw new Error('You have reached the limit of "+options.limit+". You could still change this value using options.limit but it is likely to crash.');
+            throw new Error('You have reached the limit of '+options.limit+'. You could still change this value using options.limit but it is likely to crash.');
         }
     }
     appendResult(results, currents, keys);
