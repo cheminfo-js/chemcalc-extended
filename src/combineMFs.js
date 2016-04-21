@@ -3,12 +3,14 @@
 var CC = require('chemcalc');
 var removeMFLastPart = require('./util/removeMFLastPart.js');
 
+var alert=alert || function(value) {console.log(value)};
+
 // TODO replace from the value coming from chemcalc
 var ELECTRON_MASS=5.4857990946e-4;
 
 function combineMFs (keys, options) {
     var options=options || {};
-
+    options.limit=options.limit || 100000;
     if (!Array.isArray(keys)) return [];
 
 
@@ -18,7 +20,6 @@ function combineMFs (keys, options) {
             keys[i] = keys[i].split(/[\.,;]/);
         }
     }
-
 
     // we allow ranges in a string ...
     // problem with ranges is that we need to now to what the range applies
@@ -60,6 +61,9 @@ function combineMFs (keys, options) {
             position = 0;
         } else {
             position++;
+        }
+        if (evolution>options.limit) {
+            alert("You have reached the limit. Only the first "+options.limit+" molecular formula will be processed.")
         }
     }
     appendResult(results, currents, keys);
