@@ -4,7 +4,7 @@ var CC = require('chemcalc');
 var removeMFLastPart = require('./util/removeMFLastPart.js');
 
 var window = window || {};
-window.alert || function(value) {console.log(value)};
+window.alert = window.alert || function(value) {console.log(value)};
 
 // TODO replace from the value coming from chemcalc
 var ELECTRON_MASS=5.4857990946e-4;
