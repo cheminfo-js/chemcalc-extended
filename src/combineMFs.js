@@ -3,8 +3,6 @@
 var CC = require('chemcalc');
 var removeMFLastPart = require('./util/removeMFLastPart.js');
 
-var window = window || {};
-window.alert = window.alert || function(value) {console.log(value)};
 
 // TODO replace from the value coming from chemcalc
 var ELECTRON_MASS=5.4857990946e-4;
@@ -64,8 +62,7 @@ function combineMFs (keys, options) {
             position++;
         }
         if (evolution>options.limit) {
-            window.alert("You have reached the limit. Only the first "+options.limit+" molecular formula will be processed.");
-            break;
+            throw new Error('You have reached the limit of "+options.limit+". You could still change this value using options.limit but it is likely to crash.');
         }
     }
     appendResult(results, currents, keys);
