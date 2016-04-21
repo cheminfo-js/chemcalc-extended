@@ -135,3 +135,5 @@ CE.splitPeptide = PEP.splitPeptide;
 CE.digestPeptide = PEP.digestPeptide;
 
 CE.massPeakPicking = massPeakPicking;
+
+CE.allowNeutralLoss = PEP.allowNeutralLoss
