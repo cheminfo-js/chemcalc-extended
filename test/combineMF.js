@@ -80,6 +80,7 @@ describe('combine MFs test', function () {
         result[0].mf.should.equal('+');
         result[0].charge.should.equal(1);
         result.length.should.equal(16);
+        HAlaCys(O0-1)AlaOH
     });
 
 

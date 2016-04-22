@@ -9,7 +9,7 @@ var ELECTRON_MASS=5.4857990946e-4;
 
 function combineMFs (keys, options) {
     var options=options || {};
-    options.limit=options.limit || 100000;
+    options.limit=options.limit || 1000000;
     if (!Array.isArray(keys)) return [];
 
 
