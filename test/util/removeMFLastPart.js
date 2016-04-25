@@ -1,6 +1,6 @@
 'use strict';
 
-var removeMFLastPart = require('../../src/util/removeMfLastPart.js');
+var removeMFLastPart = require('../../src/util/removeMFLastPart.js');
 
 
 describe('removeMfLastPart test', function () {
