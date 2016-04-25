@@ -24,10 +24,10 @@ var result=CE.matchMFs(possibleMFs, experimental, options);
 
 describe('chemcalc-extended matchMFs - check the common parameter', function () {
     it('Check results element 0', function () {
-        result.results.length.should.equal(11);
-        result.results[0].em.should.equal(60.00114);
-        result.results[0].similarity.should.equal(100);
-        result.results[2].em.should.equal(48.00114);
-        result.results[2].similarity.should.equal(60.76);
+        result.results.length.should.equal(9);
+        result.results[0].em.should.equal(48.00114);
+        result.results[0].similarity.should.equal(60.76);
+        result.results[2].em.should.equal(24);
+        result.results[2].similarity.should.equal(59.94);
     });
 });
