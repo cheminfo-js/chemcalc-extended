@@ -6491,7 +6491,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function combineMFs (keys, options) {
 	    var options=options || {};
-	    options.limit=options.limit || 100000;
+	    options.limit=options.limit || 1000000;
 	    if (!Array.isArray(keys)) return [];
 
 
