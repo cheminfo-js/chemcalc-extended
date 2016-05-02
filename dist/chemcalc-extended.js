@@ -59,21 +59,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	var CC = __webpack_require__(1);
 	var PEP = __webpack_require__(2);
 
-	var bestResults = exports.bestResults = __webpack_require__(10);
-	var MFProcessor = exports.MFProcessor = __webpack_require__(11);
+	var bestResults = exports.bestResults = __webpack_require__(11);
+	var MFProcessor = exports.MFProcessor = __webpack_require__(12);
 
 
 
-	exports.getContaminantsReferenceList = __webpack_require__(17);
+	exports.getContaminantsReferenceList = __webpack_require__(18);
 
 
-	exports.combineMFs = __webpack_require__(26);
-	exports.SimilarityProcessor = __webpack_require__(28);
-	exports.MFSimilarityProcessor = __webpack_require__(29);
-	var massPeakPicking = __webpack_require__(30);
+	exports.combineMFs = __webpack_require__(27);
+	exports.SimilarityProcessor = __webpack_require__(29);
+	exports.MFSimilarityProcessor = __webpack_require__(30);
+	var massPeakPicking = __webpack_require__(31);
 
 	if (typeof self !== 'undefined') {
-	    exports.MFProcessorWorker = __webpack_require__(31);
+	    exports.MFProcessorWorker = __webpack_require__(32);
 	}
 
 	var CE = exports;
@@ -935,6 +935,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var allowNeutralLoss = __webpack_require__(7);
 	var splitPeptide = __webpack_require__(8);
 	var digestPeptide = __webpack_require__(9);
+	var generatePeptideFragments = __webpack_require__(10);
 
 	exports.getInfo = function () {
 	    return aa;
@@ -967,57 +968,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return IEP.calculateCharge(aas, ph);
 	}
 
-	exports.generatePeptideFragments = function generatePeptideFragments(mf, options) {
-	    if (options === undefined) {
-	        options = {
-	            a: false,
-	            b: true,
-	            c: false,
-	            x: false,
-	            y: true,
-	            z: false,
-	            i: false,
-	            yb: false,
-	            ya: false
-	        };
-	    }
-	    options.maxInternal = options.maxInternal || Number.MAX_VALUE;
-	    options.minInternal = options.minInternal || 0;
-
-	    var mfs = [];
-	    var mfparts=mf.replace(/([a-z\)])([A-Z][a-z](?=[a-z]))/g,"$1 $2").split(/ /);
-
-	    var nTerm="";
-	    var cTerm="";
-
-	    for (var i=1; i<mfparts.length; i++) {
-	        nTerm+=mfparts[i-1];
-	        cTerm=mfparts[mfparts.length-i]+cTerm;
-	        addNTerm(mfs, nTerm, i, options);
-	        addCTerm(mfs, cTerm, i, options);
-	        if (options.i) mfs.push(mfparts[i]+"HC-1O-1(+1)$i:"+mfparts[i]);
-
-	        if (options.ya || options.yb) { // we have double fragmentations
-	            for (var j=i+1; j<Math.min(mfparts.length,options.maxInternal+i+1);j++) {
-	                var iTerm='';
-	                if ((j-i)>=options.minInternal){
-	                    for (var k = i; k < j; k++) {
-	                        iTerm += mfparts[k];
-	                    }
-	                    addITerm(mfs, iTerm, mfparts.length - i, j, options);
-	                }
-	            }
-	        }
-	    }
-
-
-	    if (mfs.length === 0) {
-	        mfs = mfs.concat([mf]);
-	    }
-
-	    return mfs;
-
-	};
+	exports.generatePeptideFragments = generatePeptideFragments;
 
 	exports.chargePeptide = chargePeptide;
 	exports.allowNeutralLoss = allowNeutralLoss;
@@ -1083,23 +1034,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return newmf;
 
 	};
-
-	function addNTerm(mfs, nTerm, i, options) {
-	    if (options.a) mfs.push(nTerm+"C-1O-1(+1)$a"+i);
-	    if (options.b) mfs.push(nTerm+"(+1)$b"+i);
-	    if (options.c) mfs.push(nTerm+"NH3(+1)$c"+i);
-	}
-
-	function addITerm(mfs, iTerm, i, j, options) {
-	    if (options.ya) mfs.push("H"+iTerm+"C-1O-1(+1)$a"+j+"y"+i);
-	    if (options.yb) mfs.push("H"+iTerm+"(+1)$b"+j+"y"+i);
-	}
-
-	function addCTerm(mfs, cTerm, i, options) {
-	    if (options.x) mfs.push("CO(+1)"+cTerm+"$x"+i);
-	    if (options.y) mfs.push("H2(+1)"+cTerm+"$y"+i);
-	    if (options.z) mfs.push("N-1H-1(+1)"+cTerm+"$z"+i);
-	}
 
 
 /***/ },
@@ -1505,6 +1439,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	// SOURCE: https://en.wikipedia.org/wiki/Amino_acid
 
 	function chargePeptide(mf, options) {
+	    var options=options || {};
+	    if (options.pH === undefined) options.pH=0;
 	    if (Array.isArray(mf)) {
 	        for (var i=0; i<mf.length; i++) {
 	            mf[i]=chargeOnePeptide(mf[i], options);
@@ -1516,8 +1452,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function chargeOnePeptide(mf, options) {
-	    var options=options || {};
-	    if (options.pH === undefined) options.pH=0;
 	    var pH=options.pH;
 	    // we will allow to charge the peptide at a specific pH
 
@@ -1580,10 +1514,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	}
 
-
 	module.exports = getAA;
-
-
 
 /***/ },
 /* 7 */
@@ -1734,6 +1665,83 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
+	module.exports = function(mf, options) {
+	    if (options === undefined) {
+	        options = {
+	            a: false,
+	            b: true,
+	            c: false,
+	            x: false,
+	            y: true,
+	            z: false,
+	            i: false,
+	            yb: false,
+	            ya: false
+	        };
+	    }
+	    options.maxInternal = options.maxInternal || Number.MAX_VALUE;
+	    options.minInternal = options.minInternal || 0;
+
+	    var mfs = [];
+	    // need to allow 0-9 to deal with neutral loss
+	    var mfparts=mf.replace(/([a-z\)0-9])([A-Z][a-z](?=[a-z]))/g,"$1 $2").split(/ /);
+
+	    var nTerm="";
+	    var cTerm="";
+
+	    for (var i=1; i<mfparts.length; i++) {
+	        nTerm+=mfparts[i-1];
+	        cTerm=mfparts[mfparts.length-i]+cTerm;
+	        addNTerm(mfs, nTerm, i, options);
+	        addCTerm(mfs, cTerm, i, options);
+	        if (options.i) mfs.push(mfparts[i]+"HC-1O-1(+1)$i:"+mfparts[i]);
+
+	        if (options.ya || options.yb) { // we have double fragmentations
+	            for (var j=i+1; j<Math.min(mfparts.length,options.maxInternal+i+1);j++) {
+	                var iTerm='';
+	                if ((j-i)>=options.minInternal){
+	                    for (var k = i; k < j; k++) {
+	                        iTerm += mfparts[k];
+	                    }
+	                    addITerm(mfs, iTerm, mfparts.length - i, j, options);
+	                }
+	            }
+	        }
+	    }
+
+
+	    if (mfs.length === 0) {
+	        mfs = mfs.concat([mf]);
+	    }
+
+	    return mfs;
+
+	};
+
+	function addNTerm(mfs, nTerm, i, options) {
+	    if (options.a) mfs.push(nTerm+"C-1O-1(+1)$a"+i);
+	    if (options.b) mfs.push(nTerm+"(+1)$b"+i);
+	    if (options.c) mfs.push(nTerm+"NH3(+1)$c"+i);
+	}
+
+	function addITerm(mfs, iTerm, i, j, options) {
+	    if (options.ya) mfs.push("H"+iTerm+"C-1O-1(+1)$a"+j+"y"+i);
+	    if (options.yb) mfs.push("H"+iTerm+"(+1)$b"+j+"y"+i);
+	}
+
+	function addCTerm(mfs, cTerm, i, options) {
+	    if (options.x) mfs.push("CO(+1)"+cTerm+"$x"+i);
+	    if (options.y) mfs.push("H2(+1)"+cTerm+"$y"+i);
+	    if (options.z) mfs.push("N-1H-1(+1)"+cTerm+"$z"+i);
+	}
+
+
+/***/ },
+/* 11 */
+/***/ function(module, exports) {
+
+	'use strict';
+
 	module.exports = bestResults;
 
 	/* we have 2 criteria to find the best results
@@ -1783,13 +1791,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 
-	var initSimilarity=__webpack_require__(12).initSimilarity;
+	var initSimilarity=__webpack_require__(13).initSimilarity;
 
 	var CC = __webpack_require__(1);
 
@@ -1865,12 +1873,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Similarity = __webpack_require__(13);
+	var Similarity = __webpack_require__(14);
 
 	module.exports.initSimilarity= function(context, options) {
 	    // we will copy the options to be sure ...
@@ -1896,7 +1904,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1906,7 +1914,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var COMMON_SECOND=2;
 	var COMMON_BOTH=3; // should be a binary operation !
 
-	var Stat = __webpack_require__(14).array;
+	var Stat = __webpack_require__(15).array;
 
 
 	module.exports = function Comparator(options) {
@@ -2355,17 +2363,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	exports.array = __webpack_require__(15);
-	exports.matrix = __webpack_require__(16);
+	exports.array = __webpack_require__(16);
+	exports.matrix = __webpack_require__(17);
 
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -2824,11 +2832,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var arrayStat = __webpack_require__(15);
+	var arrayStat = __webpack_require__(16);
 
 	// https://github.com/accord-net/framework/blob/development/Sources/Accord.Statistics/Tools.cs
 
@@ -3350,13 +3358,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var request = __webpack_require__(18)(__webpack_require__(19), Promise);
-	var Papa = __webpack_require__(25);
+	var request = __webpack_require__(19)(__webpack_require__(20), Promise);
+	var Papa = __webpack_require__(26);
 	var CC = __webpack_require__(1);
-	var combineMFs = __webpack_require__(26);
+	var combineMFs = __webpack_require__(27);
 
 	function getContaminantsReferenceList() {
 
@@ -3431,7 +3439,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 18 */
+/* 19 */
 /***/ function(module, exports) {
 
 	/**
@@ -3559,17 +3567,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 19 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Module dependencies.
 	 */
 
-	var Emitter = __webpack_require__(20);
-	var reduce = __webpack_require__(21);
-	var requestBase = __webpack_require__(22);
-	var isObject = __webpack_require__(23);
+	var Emitter = __webpack_require__(21);
+	var reduce = __webpack_require__(22);
+	var requestBase = __webpack_require__(23);
+	var isObject = __webpack_require__(24);
 
 	/**
 	 * Root reference for iframes.
@@ -3618,7 +3626,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Expose `request`.
 	 */
 
-	var request = module.exports = __webpack_require__(24).bind(null, Request);
+	var request = module.exports = __webpack_require__(25).bind(null, Request);
 
 	/**
 	 * Determine XHR.
@@ -4642,7 +4650,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 20 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -4811,7 +4819,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 21 */
+/* 22 */
 /***/ function(module, exports) {
 
 	
@@ -4840,13 +4848,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 22 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Module of mixed-in functions shared between node and client code
 	 */
-	var isObject = __webpack_require__(23);
+	var isObject = __webpack_require__(24);
 
 	/**
 	 * Clear previous timeout.
@@ -5012,7 +5020,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 23 */
+/* 24 */
 /***/ function(module, exports) {
 
 	/**
@@ -5031,7 +5039,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 24 */
+/* 25 */
 /***/ function(module, exports) {
 
 	// The node and browser modules expose versions of this with the
@@ -5069,7 +5077,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 25 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -6478,13 +6486,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 26 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var CC = __webpack_require__(1);
-	var removeMFLastPart = __webpack_require__(27);
+	var removeMFLastPart = __webpack_require__(28);
 
 
 	// TODO replace from the value coming from chemcalc
@@ -6688,7 +6696,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 27 */
+/* 28 */
 /***/ function(module, exports) {
 
 	/*
@@ -6727,12 +6735,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 28 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var initSimilarity=__webpack_require__(12).initSimilarity;
+	var initSimilarity=__webpack_require__(13).initSimilarity;
 
 
 	/*
@@ -6762,14 +6770,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 29 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var CC = __webpack_require__(1);
-	var SimilarityProcessor = __webpack_require__(28);
-	var Stat = __webpack_require__(14).array;
+	var SimilarityProcessor = __webpack_require__(29);
+	var Stat = __webpack_require__(15).array;
 
 	/*
 
@@ -6823,12 +6831,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 30 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var Stat=__webpack_require__(14);
+	var Stat=__webpack_require__(15);
 
 	module.exports=massPeakPicking;
 
@@ -6956,14 +6964,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 31 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var WorkerManager = __webpack_require__(32);
+	var WorkerManager = __webpack_require__(33);
 
-	var bestResults = __webpack_require__(10);
+	var bestResults = __webpack_require__(11);
 
 	module.exports = MFProcessorWorker;
 
@@ -7048,12 +7056,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 32 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var workerTemplate = __webpack_require__(33);
+	var workerTemplate = __webpack_require__(34);
 
 	var CORES = navigator.hardwareConcurrency || 1;
 
@@ -7206,7 +7214,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 33 */
+/* 34 */
 /***/ function(module, exports) {
 
 	'use strict';
