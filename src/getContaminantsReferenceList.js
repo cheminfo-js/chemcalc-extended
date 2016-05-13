@@ -33,9 +33,7 @@ function getContaminantsReferenceList() {
                 references[ref.label]=ref;
             }
         );
-
-// contaminants=contaminants.slice(20,25);
-
+        
         var results=[];
 
         for (var contaminant of contaminants) {
@@ -61,12 +59,26 @@ function getContaminantsReferenceList() {
                 results.push(mf)
             }
         }
-        return results;
+        
+        results=results.filter(function(a) {
+            return a.msem!==0;
+        })
+        
+        results.sort(function(a,b) {
+            return a.msem-b.msem;
+        });
+        
+        
+
+        var uniqueResults=[results[0]];
+        for (var i=1; i<results.length; i++) {
+            if (results[i-1].msem!==results[i].msem) {
+                uniqueResults.push(results[i]);
+            }
+        }
+        
+        return uniqueResults;
     }
-
-
-
-
 }
 
 module.exports = getContaminantsReferenceList;

@@ -9,8 +9,8 @@ describe('Test getContaminantsReferenceList', function () {
         this.retries(5);
         return CE.getContaminantsReferenceList().then(function(result) {
             result.length.should.be.above(1000);
-            result[0].em.should.be.above(190);
-            result[0].charge.should.be.equal(1);
+            result[0].em.should.be.equal(26.0030740049 );
+            result[0].charge.should.be.equal(-1);
         });
     });
 });
