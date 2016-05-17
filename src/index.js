@@ -9,7 +9,7 @@ var MFProcessor = exports.MFProcessor = require('./MFProcessor');
 
 
 exports.getContaminantsReferenceList = require('./getContaminantsReferenceList');
-
+exports.getReferenceList = require('./getReferenceList');
 
 exports.combineMFs = require('./combineMFs');
 exports.SimilarityProcessor = require('./SimilarityProcessor');
