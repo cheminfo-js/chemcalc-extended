@@ -65,15 +65,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	exports.getContaminantsReferenceList = __webpack_require__(18);
-
+	exports.getReferenceList = __webpack_require__(29);
 
 	exports.combineMFs = __webpack_require__(27);
-	exports.SimilarityProcessor = __webpack_require__(29);
-	exports.MFSimilarityProcessor = __webpack_require__(30);
-	var massPeakPicking = __webpack_require__(31);
+	exports.SimilarityProcessor = __webpack_require__(30);
+	exports.MFSimilarityProcessor = __webpack_require__(31);
+	var massPeakPicking = __webpack_require__(32);
 
 	if (typeof self !== 'undefined') {
-	    exports.MFProcessorWorker = __webpack_require__(32);
+	    exports.MFProcessorWorker = __webpack_require__(33);
 	}
 
 	var CE = exports;
@@ -6750,6 +6750,68 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var request = __webpack_require__(19)(__webpack_require__(20), Promise);
+	var Papa = __webpack_require__(26);
+	var CC = __webpack_require__(1);
+	var combineMFs = __webpack_require__(27);
+
+	function getReferenceList(url) {
+
+	    return Promise.all([
+	        request.get(url).end(),
+	    ]).then(function (results) {
+	        return parse(results[0].text);
+	    });
+	    
+	    function parse(tsv) {
+	        var contaminants=Papa.parse(tsv,
+	            {
+	                delimiter:"\t",
+	                header: true
+	            }
+	        ).data;
+
+	        var results=[];
+	        for (var contaminant of contaminants) {
+	            // we need to calculate all the possibilities
+	            var mfs=combineMFs([contaminant.mf, contaminant.modif]);
+	            for (var mf of mfs) {
+	                mf.info=contaminant;
+	                mf.similarity='';
+	                mf.mf=CC.analyseMF(mf.mf).mf;
+	                results.push(mf)
+	            }
+	        }
+	        
+	        results=results.filter(function(a) {
+	            return a.msem!==0;
+	        })
+	        
+	        results.sort(function(a,b) {
+	            return a.msem-b.msem;
+	        });
+
+	        var uniqueResults=[results[0]];
+	        for (var i=1; i<results.length; i++) {
+	            if (results[i-1].msem!==results[i].msem) {
+	                uniqueResults.push(results[i]);
+	            }
+	        }
+	        
+	        return uniqueResults;
+	    }
+	}
+
+	module.exports = getReferenceList;
+
+
+
+
+
+/***/ },
+/* 30 */
+/***/ function(module, exports, __webpack_require__) {
+
 	'use strict';
 
 	var initSimilarity=__webpack_require__(13).initSimilarity;
@@ -6782,13 +6844,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 30 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var CC = __webpack_require__(1);
-	var SimilarityProcessor = __webpack_require__(29);
+	var SimilarityProcessor = __webpack_require__(30);
 	var Stat = __webpack_require__(15).array;
 
 	/*
@@ -6843,7 +6905,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 31 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -6976,12 +7038,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 32 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var WorkerManager = __webpack_require__(33);
+	var WorkerManager = __webpack_require__(34);
 
 	var bestResults = __webpack_require__(11);
 
@@ -7068,12 +7130,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 33 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var workerTemplate = __webpack_require__(34);
+	var workerTemplate = __webpack_require__(35);
 
 	var CORES = navigator.hardwareConcurrency || 1;
 
@@ -7226,7 +7288,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 34 */
+/* 35 */
 /***/ function(module, exports) {
 
 	'use strict';
