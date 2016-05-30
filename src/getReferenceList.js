@@ -62,9 +62,9 @@ function getReferenceList(url, urlReferences) {
             var mfs=combineMFs([contaminant.mf, contaminant.modif]);
             for (var mf of mfs) {
                 mf.info=contaminant;
-                if (! mf.ESI && ! mf.MALDI && ! mf.positive && ! mf.negative) {
+                if (! contaminant.ESI && ! contaminant.MALDI && ! contaminant.positive && ! contaminant.negative) {
                     mf.ESI = true;
-                    mf.MASLDI=true;
+                    mf.MALDI=true;
                     mf.positive=true;
                     mf.negative=true;
                 } else {
