@@ -65,9 +65,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	exports.getContaminantsReferenceList = __webpack_require__(18);
-	exports.getReferenceList = __webpack_require__(29);
+	exports.getReferenceList = __webpack_require__(19);
 
-	exports.combineMFs = __webpack_require__(27);
+	exports.combineMFs = __webpack_require__(28);
 	exports.SimilarityProcessor = __webpack_require__(30);
 	exports.MFSimilarityProcessor = __webpack_require__(31);
 	var massPeakPicking = __webpack_require__(32);
@@ -3361,87 +3361,13 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var request = __webpack_require__(19)(__webpack_require__(20), Promise);
-	var Papa = __webpack_require__(26);
-	var CC = __webpack_require__(1);
-	var combineMFs = __webpack_require__(27);
+	var getReferenceList = __webpack_require__(19);
 
 	function getContaminantsReferenceList() {
-
-	    return Promise.all([
-	        request.get('https://googledocs.cheminfo.org/spreadsheets/d/1LrJCl9-xSZKhGA9Y8nKVkYwB-mEOHBkTXg5qYXeFpZY/export?format=tsv').end(),
-	        request.get('https://googledocs.cheminfo.org/spreadsheets/d/1C_H9aiJyu9M9in7sHMOaz-d3Sv758rE72oLxEKH9ioA/export?format=tsv').end()
-	    ]).then(function (results) {
-	        return parse(results[0].text, results[1].text);
-	    });
-
-	    function parse(tsv, tsvReferences) {
-	        var contaminants=Papa.parse(tsv,
-	            {
-	                delimiter:"\t",
-	                header: true
-	            }
-	        ).data;
-
-	        var referencesArray=Papa.parse(tsvReferences,
-	            {
-	                delimiter:"\t",
-	                header: true
-	            }
-	        ).data;
-
-	        var references={};
-	        referencesArray.forEach(
-	            function(ref) {
-	                references[ref.label]=ref;
-	            }
-	        );
-	        
-	        var results=[];
-
-	        for (var contaminant of contaminants) {
-	            // we add references
-	            var refs=contaminant.references.split(/[ ,]+/);
-	            contaminant.references=[];
-	            for (var ref of refs) {
-	                contaminant.references.push(
-	                    references[ref]
-	                );
-	            }
-
-	            // we need to calculate all the possibilities
-	            var mfs=combineMFs([contaminant.mf, contaminant.modif]);
-	            for (var mf of mfs) {
-	                mf.info=contaminant;
-	                mf.ESI = contaminant.ESI==='X' ? true : false;
-	                mf.MALDI = contaminant.MALDI==='X' ? true : false;
-	                mf.positive = contaminant.positive==='X' ? true : false;
-	                mf.negative = contaminant.negative==='X' ? true : false;
-	                mf.similarity='';
-	                mf.mf=CC.analyseMF(mf.mf).mf;
-	                results.push(mf)
-	            }
-	        }
-	        
-	        results=results.filter(function(a) {
-	            return a.msem!==0;
-	        })
-	        
-	        results.sort(function(a,b) {
-	            return a.msem-b.msem;
-	        });
-	        
-	        
-
-	        var uniqueResults=[results[0]];
-	        for (var i=1; i<results.length; i++) {
-	            if (results[i-1].msem!==results[i].msem) {
-	                uniqueResults.push(results[i]);
-	            }
-	        }
-	        
-	        return uniqueResults;
-	    }
+	    return getReferenceList(
+	        'https://googledocs.cheminfo.org/spreadsheets/d/1LrJCl9-xSZKhGA9Y8nKVkYwB-mEOHBkTXg5qYXeFpZY/export?format=tsv',
+	        'https://googledocs.cheminfo.org/spreadsheets/d/1C_H9aiJyu9M9in7sHMOaz-d3Sv758rE72oLxEKH9ioA/export?format=tsv'
+	    );
 	}
 
 	module.exports = getContaminantsReferenceList;
@@ -3452,6 +3378,118 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 19 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var request = __webpack_require__(20)(__webpack_require__(21), Promise);
+	var Papa = __webpack_require__(27);
+	var CC = __webpack_require__(1);
+	var combineMFs = __webpack_require__(28);
+
+	function getReferenceList(url, urlReferences) {
+
+	    if (urlReferences) {
+	        return Promise.all([
+	            request.get(url).end(),
+	            request.get(urlReferences).end()
+	        ]).then(function (results) {
+	            return parse(results[0].text, results[1].text);
+	        });
+	    } else {
+	        return Promise.all([
+	            request.get(url).end(),
+	        ]).then(function (results) {
+	            return parse(results[0].text);
+	        });
+	    }
+	    
+	    function parse(tsv, tsvReferences) {
+	        var contaminants=Papa.parse(tsv,
+	            {
+	                delimiter:"\t",
+	                header: true
+	            }
+	        ).data;
+
+	        if (tsvReferences) {
+	            var referencesArray=Papa.parse(tsvReferences,
+	                {
+	                    delimiter:"\t",
+	                    header: true
+	                }
+	            ).data;
+
+	            var references={};
+	            referencesArray.forEach(
+	                function(ref) {
+	                    references[ref.label]=ref;
+	                }
+	            );   
+	        }
+	        
+	        var results=[];
+
+	        for (var contaminant of contaminants) {
+	            if (tsvReferences) {
+	                // we add references
+	                var refs=contaminant.references.split(/[ ,]+/);
+	                contaminant.references=[];
+	                for (var ref of refs) {
+	                    contaminant.references.push(
+	                        references[ref]
+	                    );
+	                }   
+	            }
+
+	            // we need to calculate all the possibilities
+	            var mfs=combineMFs([contaminant.mf, contaminant.modif]);
+	            for (var mf of mfs) {
+	                mf.info=contaminant;
+	                if (! mf.ESI && ! mf.MALDI && ! mf.positive && ! mf.negative) {
+	                    mf.ESI = true;
+	                    mf.MASLDI=true;
+	                    mf.positive=true;
+	                    mf.negative=true;
+	                } else {
+	                    mf.ESI = contaminant.ESI==='X' ? true : false;
+	                    mf.MALDI = contaminant.MALDI==='X' ? true : false;
+	                    mf.positive = contaminant.positive==='X' ? true : false;
+	                    mf.negative = contaminant.negative==='X' ? true : false;
+	                }
+	                mf.similarity='';
+	                mf.mf=CC.analyseMF(mf.mf).mf;
+	                results.push(mf)
+	            }
+	        }
+
+	        results=results.filter(function(a) {
+	            return a.msem!==0;
+	        })
+
+	        results.sort(function(a,b) {
+	            return a.msem-b.msem;
+	        });
+
+
+
+	        var uniqueResults=[results[0]];
+	        for (var i=1; i<results.length; i++) {
+	            if (results[i-1].msem!==results[i].msem) {
+	                uniqueResults.push(results[i]);
+	            }
+	        }
+
+	        return uniqueResults;
+	    }
+	}
+
+	module.exports = getReferenceList;
+
+
+
+
+
+/***/ },
+/* 20 */
 /***/ function(module, exports) {
 
 	/**
@@ -3579,17 +3617,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 20 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Module dependencies.
 	 */
 
-	var Emitter = __webpack_require__(21);
-	var reduce = __webpack_require__(22);
-	var requestBase = __webpack_require__(23);
-	var isObject = __webpack_require__(24);
+	var Emitter = __webpack_require__(22);
+	var reduce = __webpack_require__(23);
+	var requestBase = __webpack_require__(24);
+	var isObject = __webpack_require__(25);
 
 	/**
 	 * Root reference for iframes.
@@ -3638,7 +3676,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Expose `request`.
 	 */
 
-	var request = module.exports = __webpack_require__(25).bind(null, Request);
+	var request = module.exports = __webpack_require__(26).bind(null, Request);
 
 	/**
 	 * Determine XHR.
@@ -4662,7 +4700,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 21 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -4831,7 +4869,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 22 */
+/* 23 */
 /***/ function(module, exports) {
 
 	
@@ -4860,13 +4898,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 23 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Module of mixed-in functions shared between node and client code
 	 */
-	var isObject = __webpack_require__(24);
+	var isObject = __webpack_require__(25);
 
 	/**
 	 * Clear previous timeout.
@@ -5032,7 +5070,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 24 */
+/* 25 */
 /***/ function(module, exports) {
 
 	/**
@@ -5051,7 +5089,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 25 */
+/* 26 */
 /***/ function(module, exports) {
 
 	// The node and browser modules expose versions of this with the
@@ -5089,7 +5127,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 26 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -6498,13 +6536,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 27 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var CC = __webpack_require__(1);
-	var removeMFLastPart = __webpack_require__(28);
+	var removeMFLastPart = __webpack_require__(29);
 
 
 	// TODO replace from the value coming from chemcalc
@@ -6708,7 +6746,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 28 */
+/* 29 */
 /***/ function(module, exports) {
 
 	/*
@@ -6744,68 +6782,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	    return "";
 	}
-
-
-/***/ },
-/* 29 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var request = __webpack_require__(19)(__webpack_require__(20), Promise);
-	var Papa = __webpack_require__(26);
-	var CC = __webpack_require__(1);
-	var combineMFs = __webpack_require__(27);
-
-	function getReferenceList(url) {
-
-	    return Promise.all([
-	        request.get(url).end(),
-	    ]).then(function (results) {
-	        return parse(results[0].text);
-	    });
-	    
-	    function parse(tsv) {
-	        var contaminants=Papa.parse(tsv,
-	            {
-	                delimiter:"\t",
-	                header: true
-	            }
-	        ).data;
-
-	        var results=[];
-	        for (var contaminant of contaminants) {
-	            // we need to calculate all the possibilities
-	            var mfs=combineMFs([contaminant.mf, contaminant.modif]);
-	            for (var mf of mfs) {
-	                mf.info=contaminant;
-	                mf.similarity='';
-	                mf.mf=CC.analyseMF(mf.mf).mf;
-	                results.push(mf)
-	            }
-	        }
-	        
-	        results=results.filter(function(a) {
-	            return a.msem!==0;
-	        })
-	        
-	        results.sort(function(a,b) {
-	            return a.msem-b.msem;
-	        });
-
-	        var uniqueResults=[results[0]];
-	        for (var i=1; i<results.length; i++) {
-	            if (results[i-1].msem!==results[i].msem) {
-	                uniqueResults.push(results[i]);
-	            }
-	        }
-	        
-	        return uniqueResults;
-	    }
-	}
-
-	module.exports = getReferenceList;
-
-
-
 
 
 /***/ },
