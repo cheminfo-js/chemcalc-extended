@@ -49,7 +49,6 @@ MFProcessor.prototype.process = function (mf, result) {
     this.similarity.setPeaks2(ccResult.arrayXXYY);
 
     var similarityResult = this.similarity.getSimilarity();
-
     if (!result.em) result.em = ccResult.em;
     if (!result.info) result.info = mf;
     if (!result.mf) result.mf = ccResult.mf;
