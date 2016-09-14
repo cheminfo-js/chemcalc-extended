@@ -27,6 +27,18 @@ var widthBottom=mass*0.010;
 * decimalsPPM : number of decimals for PPM
 * decimalsMass : number decimals for the mass
 
+#### analyseMF(mf, options)
+
+Extends analyseMF from chemcalc to return a property atoms that contains the number of each of the atoms.
+
+__Arguments__
+
+* mf - string with a molecular formula to charge
+* options
+
+
+
+
 ### matchMFs
 
 We will try to find the molecular formula that match 

@@ -22,49 +22,49 @@ function shiftArray(array, shift) {
 describe('chemcalc-extended matchMFs - check the common parameter', function () {
 
 
-    var theoretical=CE.analyseMF("C", {isotopomers:'arrayXXYY'}).arrayXXYY;;
-    var sumY=Stat.sum(theoretical[1]);
-    for (var i=0; i<theoretical[1].length; i++) {
-        theoretical[1][i]/=sumY;
-    }
+    it('Check results element 0', function () {
+        var theoretical=CE.analyseMF("C", {isotopomers:'arrayXXYY'}).arrayXXYY;;
+        var sumY=Stat.sum(theoretical[1]);
+        for (var i=0; i<theoretical[1].length; i++) {
+            theoretical[1][i]/=sumY;
+        }
 
-    var options={
-        widthBottom: 0.2,
-        widthTop: 0.1,
-        common: false
+        var options={
+            widthBottom: 0.2,
+            widthTop: 0.1,
+            common: false
 
-    };
+        };
 
-    var xExperimental=experimental[0];
-    var yExperimental=experimental[1];
+        var xExperimental=experimental[0];
+        var yExperimental=experimental[1];
 
 // we shift the spectrum to the left so that the first point is 0 on x axis
 // we just want to identify the patter
-    var xTheoretical=theoretical[0].map(function(value) {return value-theoretical[0][0];});
-    var yTheoretical=theoretical[1];
+        var xTheoretical=theoretical[0].map(function(value) {return value-theoretical[0][0];});
+        var yTheoretical=theoretical[1];
 
-    var width=xTheoretical[xTheoretical.length-1]-xTheoretical[0]+1;
+        var width=xTheoretical[xTheoretical.length-1]-xTheoretical[0]+1;
 
-    var noiseLevel=0;
-    var similarityProcessor=new CE.SimilarityProcessor(experimental, options);
+        var noiseLevel=0;
+        var similarityProcessor=new CE.SimilarityProcessor(experimental, options);
 
-    var result=[new Array(xExperimental.length),new Array(xExperimental.length)];
-    for (var i=0; i<xExperimental.length; i++) {
-        var x=xExperimental[i];
-        if (yExperimental[i]>noiseLevel) {
-            var shiftedTheoretical=[shiftArray(xTheoretical, x), yTheoretical];
-            var similarity=similarityProcessor.process(shiftedTheoretical, x-0.5, x+width+0.5);
-            result[0][i]=x;
-            result[1][i]=similarity;
-        } else {
-            result[0][i]=x;
-            result[1][i]=0;
+        var result=[new Array(xExperimental.length),new Array(xExperimental.length)];
+        for (var i=0; i<xExperimental.length; i++) {
+            var x=xExperimental[i];
+            if (yExperimental[i]>noiseLevel) {
+                var shiftedTheoretical=[shiftArray(xTheoretical, x), yTheoretical];
+                var similarity=similarityProcessor.process(shiftedTheoretical, x-0.5, x+width+0.5);
+                result[0][i]=x;
+                result[1][i]=similarity;
+            } else {
+                result[0][i]=x;
+                result[1][i]=0;
+            }
         }
-    }
 
 
 
-    it('Check results element 0', function () {
         result.length.should.equal(2);
         result[0].length.should.equal(163);
         result[0][1].should.equal(11.7);

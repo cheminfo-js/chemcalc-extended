@@ -22,7 +22,7 @@ if (typeof self !== 'undefined') {
 
 var CE = exports;
 
-CE.analyseMF = CC.analyseMF;
+CE.analyseMF = require('./analyseMF');
 CE.getInfo = CC.getInfo;
 CE.mfFromMonoisotopicMass = CC.mfFromMonoisotopicMass;
 
