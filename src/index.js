@@ -5,8 +5,8 @@ var PEP = require('peptide');
 
 var bestResults = exports.bestResults = require('./bestResults');
 var MFProcessor = exports.MFProcessor = require('./MFProcessor');
-
-
+var getPubchemStats = require('./getPubchemStats');
+var mfFromMonoisotopicMassPubchemPromise = require('./mfFromMonoisotopicMassPubchemPromise');
 
 exports.getContaminantsReferenceList = require('./getContaminantsReferenceList');
 exports.getReferenceList = require('./getReferenceList');
@@ -29,7 +29,21 @@ CE.mfFromMonoisotopicMass = CC.mfFromMonoisotopicMass;
 
 CE.mfFromMonoisotopicMassSimilarity = require('./mfFromMonoisotopicMassSimilarity');
 
+CE.pubchemStats={};
+CE.getPubchemStats=function (id) {
+    id = id || '25_C-H.C-N.C-O.C-S.C-P.C-FClBr.O-P.O-S.CCNP-HFClBr';
+    if (CE.pubchemStats[id]) return Promise.resolve(CE.pubchemStats[id]);
+    return getPubchemStats(id).then(function(value) {
+        CE.pubchemStats[id]=value;
+        return value;
+    });
+};
 
+CE.mfFromMonoisotopicMassPubchemPromise = function (mass, options) {
+    return CE.getPubchemStats().then( function(pubchemStats) {
+        return mfFromMonoisotopicMassPubchemPromise(mass, pubchemStats, options);
+    });
+}
 
 CE.matchMFs = function (mfsArray, experimental, options) {
     options = options || {};
