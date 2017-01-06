@@ -31,8 +31,8 @@ describe('chemcalc-extended test', function () {
     it('Check results', function () {
         result.results.length.should.equal(10);
         result.numberResults.should.equal(79);
-        result.results[0].mf.value.should.equal("C4H11N9O2")
-        result.results[0].error.should.equal(-0.0014293644);
+        result.results[0].mf.value.should.equal("C4H11N9O2");
+        result.results[0].error.should.approximately(-0.0014293644, 0.000001);
         result.results[0].ppm.should.equal(-6.5838);
         result.results[0].em.should.equal(217.10357);
     });
@@ -45,8 +45,8 @@ describe('Eutrophication potential', function () {
     it('Check results', function () {
         resultEP.v.should.equal(1.2182971014492754);
         resultEP.thOD.should.equal(4.25);
-        resultEP.ep.should.equal(0.6606776206950749);
-        resultEP.mw.should.equal(175.125768);
+        resultEP.ep.should.approximately(0.6606776206950749, 0.0000001);
+        resultEP.mw.should.approximately(175.125768, 0.000001);
         resultEP.mf.value.should.equal("C5 H10 O2 P N3");
         resultEP.log.should.equal("Successful calculation");
     });
