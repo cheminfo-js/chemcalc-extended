@@ -4,7 +4,7 @@ var CE = require('..');
 
 
 describe('Test mfFromMonoisotopicMassPubchem', function () {
-    it.only('Check the result', function () {
+    it('Check the result', function () {
         this.timeout(10000);
 
         var options={
@@ -18,7 +18,9 @@ describe('Test mfFromMonoisotopicMassPubchem', function () {
         var targetMass=200.123;
         
         return CE.mfFromMonoisotopicMassPubchemPromise(targetMass, options).then(function(result) {
-            console.log(result);
+            var mfs=result.results;
+            mfs.length.should.equal(3);
+            mfs[0].mf.should.equal('C4H12N10');
         });
     });
 });
