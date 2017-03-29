@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "papaparse": "^4.1.2",
-    "chemcalc": "^3.0.6",
+    "chemcalc": "^3.3.3",
     "ml-stat": "^1.0.1",
     "peaks-similarity": "^2.3.0",
     "peptide": "^1.5.2",
