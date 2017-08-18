@@ -7083,9 +7083,27 @@ var removeMFLastPart = __webpack_require__(33);
 // TODO replace from the value coming from chemcalc
 var ELECTRON_MASS = 5.4857990946e-4;
 
+/**
+ *
+ * @param keys
+ * @param options
+ * @param {number} [options.limit=1000000] - Maximum number of results
+ * @param {number} [options.minMass=0] - Minimal monoisotopic mass
+ * @param {number} [options.maxMass=+Infinity] - Maximal monoisotopic mass
+ * @param {number} [options.minMSMass=0] - Minimal observed monoisotopic mass
+ * @param {number} [options.maxMSMass=+Infinity] - Maximal observed monoisotopic mass
+ * @param {number} [options.minCharge=-Infinity] - Minimal charge
+ * @param {number} [options.maxCharge=+Infinity] - Maximal charge
+ * @returns {Array}
+ */
+
 function combineMFs(keys, options) {
-    var options = options || {};
-    options.limit = options.limit || 1000000;
+
+    options = Object.assign({}, {
+        limit: 1000000,
+        minCharge: Number.NEGATIVE_INFINITY,
+        maxCharge: Number.POSITIVE_INFINITY
+    }, options);
     if (!Array.isArray(keys)) return [];
 
     // we allow String delimited by ". , or ;" instead of an array
@@ -7128,7 +7146,7 @@ function combineMFs(keys, options) {
     while (position < currents.length) {
         if (currents[position] < sizes[position]) {
             evolution++;
-            appendResult(results, currents, keys);
+            appendResult(results, currents, keys, options);
             currents[position]++;
             for (var i = 0; i < position; i++) {
                 currents[i] = 0;
@@ -7141,7 +7159,7 @@ function combineMFs(keys, options) {
             throw new Error('You have reached the limit of ' + options.limit + '. You could still change this value using options.limit but it is likely to crash.');
         }
     }
-    appendResult(results, currents, keys);
+    appendResult(results, currents, keys, options);
     return results;
 }
 
@@ -7191,12 +7209,27 @@ function getEMFromParts(parts, currents) {
     };
 }
 
-function appendResult(results, currents, keys) {
+function appendResult(results, currents, keys, options) {
     // this script is designed to combine molecular formula
     // that may contain comments after a "$" sign
     // therefore we should put all the comments at the ned
+
+    var info = getEMFromParts(keys, currents);
+
+    var em = info.em;
+    var msem = info.msem;
+    var charge = info.charge;
+
+    if (typeof options.minMass !== 'undefined' && em < options.minMass || typeof options.maxMass !== 'undefined' && em > options.maxMass) return;
+    if (typeof options.minMSMass !== 'undefined' && msem < options.minMSMass || typeof options.maxMSMass !== 'undefined' && msem > options.maxMSMass) return;
+    if (charge < options.minCharge || charge > options.maxCharge) return;
+
     var result = { mf: '' };
     var comments = [];
+
+    result.em = em;
+    result.msem = msem;
+    result.charge = charge;
 
     for (var i = 0; i < keys.length; i++) {
         var key = keys[i][currents[i]];
@@ -7208,10 +7241,6 @@ function appendResult(results, currents, keys) {
             }
             result.mf += key;
         }
-        var info = getEMFromParts(keys, currents);
-        result.em = info.em;
-        result.msem = info.msem;
-        result.charge = info.charge;
     }
 
     if (comments.length > 0) result.mf += '$' + comments.join(' ');
