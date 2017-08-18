@@ -89,6 +89,16 @@ describe('combine MFs test', function () {
         result.length.should.equal(101*101);
     });
 
+    it('From array of string to large array and filter', function () {
+        var mfsArray=["C0-100","O0-100"];
+        var result=CE.combineMFs(mfsArray,
+            {
+                minMass: 0.1,
+                maxMass:13
+            });
+        result.length.should.equal(1);
+    });
+
     it('Strange comments', function () {
         var mfsArray=["C$1>10","O$D2>20"];
         var result=CE.combineMFs(mfsArray);
