@@ -12,6 +12,7 @@ exports.getContaminantsReferenceList = require('./getContaminantsReferenceList')
 exports.getReferenceList = require('./getReferenceList');
 
 exports.combineMFs = require('./combineMFs');
+exports.enumerateMF = require('./enumerateMF');
 exports.SimilarityProcessor = require('./SimilarityProcessor');
 exports.MFSimilarityProcessor = require('./MFSimilarityProcessor');
 var massPeakPicking = require('./massPeakPicking');
