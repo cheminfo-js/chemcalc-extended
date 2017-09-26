@@ -1,7 +1,13 @@
 var enumerateRegExp = require('regexp-enumerator');
 
+/**
+ * Enumerate molecules given a regular expression.
+ * @param {string|RegExp} regexp - Regular expression to enumerate
+ * @param {object} options - same parameters as [regexp-enumerator](https://cheminfo-js.github.io/regexp-enumerator/)
+ * @returns {Array} - Array of molecules generated with the regular expression.
+ */
 function enumerateMF(regexp, options) {
-    options = options | {};
+    options = options || {};
     var source = preprocessRegExp(typeof regexp !== 'string' ? regexp.source : regexp);
     var output = enumerateRegExp(source, options);
     output = postProcess(output);
