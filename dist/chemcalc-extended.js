@@ -1,3 +1,9 @@
+/**
+ * chemcalc-extended - chemcalc-extended project - extends chemcalc with new methods
+ * @version v1.29.1
+ * @link https://github.com/cheminfo-js/chemcalc-extended
+ * @license MIT
+ */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -82,8 +88,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /**
  * chemcalc - Analyse molecular formula
- * @version v3.4.0
- * @date 2017-07-27T12:18:49.432Z
+ * @version v3.4.1
+ * @date 2017-09-22T11:57:23.497Z
  * @link http://www.chemcalc.org
  * @license BSD
 */
@@ -2401,11 +2407,6 @@ return /******/ (function(modules) { // webpackBootstrap
                 e = d.b = ao(d.a);f = e.S();g = e.T();Tr(a, f, (ht(g), g) / c * b);
             }
         }
-        function Hu(a) {
-            var b, c, d;c = new bq(a.d);d = new Gj('');c.a < c.c.a.length && (d = new Gj(Gh(aq(c))));while (c.a < c.c.a.length) {
-                b = aq(c);b.f == 1 ? Ej(d, '.' + Uu(b)) : b.f == 0 ? Ej(d, '.n' + Uu(b)) : Ej(d, '.' + b.f + Uu(b));
-            }return d.a;
-        }
         function Bq(a, b, c) {
             var d, e, f, g, h;h = b == null ? 0 : (g = kb(b), g | 0);e = (d = a.a.get(h), d == null ? [] : d);if (e.length == 0) {
                 a.a.set(h, e);
@@ -2555,6 +2556,17 @@ return /******/ (function(modules) { // webpackBootstrap
             } else {
                 g = d ? Jw : 0;f = d ? Iw : 0;e = c >> b - 44;
             }return Md(e & Iw, f & Iw, g & Jw);
+        }
+        function Hu(a) {
+            var b, c, d, e, f;d = new bq(a.d);f = new Gj('');b = true;while (d.a < d.c.a.length) {
+                b ? b = false : (f.a += '.', f);c = aq(d);if (c.f == 1) {
+                    Ej(f, Uu(c));
+                } else if (c.f == 0) {
+                    Ej(f, 'n' + Uu(c));
+                } else {
+                    e = vj(c.f + '', '\\.0+$', '');Ej(f, e + ('' + Uu(c)));
+                }
+            }return f.a;
         }
         function Qk(a, b) {
             var c, d, e;if (b == 0) {
@@ -3903,9 +3915,9 @@ return /******/ (function(modules) { // webpackBootstrap
             Ww = 4294967296,
             Xw = 1073741824,
             Yw = { l: 0, m: 0, h: 524288 },
-            Zw = { 14: 1, 40: 1 },
+            Zw = { 14: 1, 39: 1 },
             $w = '_gwt_modCount',
-            _w = { 39: 1 },
+            _w = { 38: 1 },
             ax = { 41: 1, 31: 1 },
             bx = { 3: 1, 63: 1 },
             cx = { 3: 1, 56: 1 },
@@ -4097,7 +4109,7 @@ return /******/ (function(modules) { // webpackBootstrap
             return Mb(this.a);
         };var Xe = ji(10);var Jd;var le, me, ne, oe;Ch(120, 1, {});var $e = ji(120);Ch(119, 120, {});var Ze = ji(119);Ch(71, 119, {}, Kh);var _e = ji(71);Ch(48, 1, { 70: 1 });_.q = function Mh() {
             return this.a;
-        };var af = ji(48);Ch(44, 11, Aw, Nh);var bf = ji(44);Ch(38, 11, Aw, Oh, Ph);var lf = ji(38);Ch(88, 38, Aw, Qh, Rh);var cf = ji(88);Ch(34, 1, { 3: 1, 14: 1, 34: 1 });_.C = function Gi(a) {
+        };var af = ji(48);Ch(44, 11, Aw, Nh);var bf = ji(44);Ch(37, 11, Aw, Oh, Ph);var lf = ji(37);Ch(88, 37, Aw, Qh, Rh);var cf = ji(88);Ch(34, 1, { 3: 1, 14: 1, 34: 1 });_.C = function Gi(a) {
             return this.b - a.b;
         };_.compareTo = function Fi(a) {
             return this.b - a.b;
@@ -4125,7 +4137,7 @@ return /******/ (function(modules) { // webpackBootstrap
             return fq(Hd(Ad(rf, 1), pw, 1, 5, [Xi(this.c), this.a, this.d, this.b]));
         };_.q = function kj() {
             return this.a + '.' + this.d + '(' + (this.b != null ? this.b : 'Unknown Source') + (this.c >= 0 ? ':' + this.c : '') + ')';
-        };_.c = 0;var tf = ji(33);Ch(37, 48, { 70: 1 }, Fj, Gj);var uf = ji(37);Ch(28, 48, { 70: 1 }, Mj, Nj, Oj);var vf = ji(28);Ch(100, 38, Aw, Pj);var wf = ji(100);Ch(160, 1, {});var Qj, Rj;Ch(27, 11, Aw, Uj, Vj);var zf = ji(27);Ch(17, 49, { 3: 1, 14: 1, 49: 1, 17: 1 }, jk, kk, lk, mk);_.C = function pk(a) {
+        };_.c = 0;var tf = ji(33);Ch(40, 48, { 70: 1 }, Fj, Gj);var uf = ji(40);Ch(28, 48, { 70: 1 }, Mj, Nj, Oj);var vf = ji(28);Ch(100, 37, Aw, Pj);var wf = ji(100);Ch(160, 1, {});var Qj, Rj;Ch(27, 11, Aw, Uj, Vj);var zf = ji(27);Ch(17, 49, { 3: 1, 14: 1, 49: 1, 17: 1 }, jk, kk, lk, mk);_.C = function pk(a) {
             return dk(this, a);
         };_.n = function sk(a) {
             var b;if (this === a) {
@@ -4149,19 +4161,19 @@ return /******/ (function(modules) { // webpackBootstrap
             return Kk(this);
         };_.q = function bl() {
             return pl(this, 0);
-        };_.b = -2;_.c = 0;_.d = 0;_.e = 0;var xk, yk, zk, Ak, Bk, Ck;var Bf = ji(5);var kl, ll;var Dl, El, Fl;Ch(26, 34, { 3: 1, 14: 1, 34: 1, 26: 1 }, $l);var Rl, Sl, Tl, Ul, Vl, Wl, Xl, Yl;var Cf = ki(26, _l);Ch(40, 1, Zw);_.C = function am(a) {
+        };_.b = -2;_.c = 0;_.d = 0;_.e = 0;var xk, yk, zk, Ak, Bk, Ck;var Bf = ji(5);var kl, ll;var Dl, El, Fl;Ch(26, 34, { 3: 1, 14: 1, 34: 1, 26: 1 }, $l);var Rl, Sl, Tl, Ul, Vl, Wl, Xl, Yl;var Cf = ki(26, _l);Ch(39, 1, Zw);_.C = function am(a) {
             return nj(this.a, a.a);
         };_.n = function bm(a) {
             var b;if (a === this) {
                 return true;
-            }if (!we(a, 40)) {
+            }if (!we(a, 39)) {
                 return false;
             }b = a;return oj(this.a, b.a);
         };_.p = function cm() {
             return yt(this.a);
         };_.q = function dm() {
             return this.a;
-        };var Df = ji(40);Ch(140, 1, {});var Ff = ji(140);Ch(141, 140, {});var Gf = ji(141);Ch(114, 141, {}, km);_.b = 0;_.c = 0;var fm;var Ef = ji(114);Ch(132, 1, {});_.add = function ym(a) {
+        };var Df = ji(39);Ch(140, 1, {});var Ff = ji(140);Ch(141, 140, {});var Gf = ji(141);Ch(114, 141, {}, km);_.b = 0;_.c = 0;var fm;var Ef = ji(114);Ch(132, 1, {});_.add = function ym(a) {
             throw Xg(new Vj('Add not supported on this collection'));
         };_.addAll = function zm(a) {
             return sm(this, a);
@@ -4264,7 +4276,7 @@ return /******/ (function(modules) { // webpackBootstrap
         };var Kf = ji(91);Ch(133, 132, _w);_.n = function zn(a) {
             var b;if (a === this) {
                 return true;
-            }if (!we(a, 39)) {
+            }if (!we(a, 38)) {
                 return false;
             }b = a;if (b.size() != this.size()) {
                 return false;
@@ -4615,7 +4627,7 @@ return /******/ (function(modules) { // webpackBootstrap
             return true;
         };var ug = ki(106, null);Ch(107, 30, ex, Is);_.Z = function Js() {
             return true;
-        };var vg = ki(107, null);Ch(61, 133, { 3: 1, 39: 1 }, Ls, Ms);_.add = function Ns(a) {
+        };var vg = ki(107, null);Ch(61, 133, { 3: 1, 38: 1 }, Ls, Ms);_.add = function Ns(a) {
             return Ks(this, a);
         };_.clear = function Os() {
             Jr(this.g);
@@ -4627,7 +4639,7 @@ return /******/ (function(modules) { // webpackBootstrap
             return Ur(this.g, a) != null;
         };_.size = function Ss() {
             return this.g.d;
-        };var yg = ji(61);Ch(75, 40, Zw);var Cg = ji(75);Ch(76, 75, Zw, _s);var Ag = ji(76);Ch(95, 75, Zw, ct);var Bg = ji(95);Ch(35, 1, { 14: 1, 35: 1 }, Gt, Ht, It, Jt);_.C = function Kt(a) {
+        };var yg = ji(61);Ch(75, 39, Zw);var Cg = ji(75);Ch(76, 75, Zw, _s);var Ag = ji(76);Ch(95, 75, Zw, ct);var Bg = ji(95);Ch(35, 1, { 14: 1, 35: 1 }, Gt, Ht, It, Jt);_.C = function Kt(a) {
             if (!we(a, 35)) throw Xg(new Vj('Not comparable: Atoms and ' + fi(ib(a))));return At(this, a);
         };_.n = function Lt(a) {
             return Bt(this, a);
@@ -4653,7 +4665,7 @@ return /******/ (function(modules) { // webpackBootstrap
             return this.a.i + ' - ' + this.a.d + ' to ' + this.a.c + ' - current: ' + this.b;
         };_.b = 0;_.c = 0;_.d = 0;var Hg = ji(85);Ch(54, 1, {}, Iu, Ju);_.q = function Ku() {
             return Hu(this);
-        };_.c = false;_.e = false;var Jg = ji(54);Ch(29, 61, { 3: 1, 39: 1, 29: 1 }, Vu, Wu, Xu);_.q = function Yu() {
+        };_.c = false;_.e = false;var Jg = ji(54);Ch(29, 61, { 3: 1, 38: 1, 29: 1 }, Vu, Wu, Xu);_.q = function Yu() {
             return Uu(this);
         };_.a = 0;_.b = '';_.e = false;_.f = 0;var Ig = ji(29);Ch(60, 1, { 60: 1 }, av);var Kg = ji(60);Ch(42, 1, { 14: 1, 42: 1 }, bv);_.C = function cv(a) {
             var b;if (we(a, 42)) {
@@ -4673,7 +4685,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
         var toReturn = $wnd["CI"]["Chemcalc"];
 
-        toReturn.version = '3.4.0';
+        toReturn.version = '3.4.1';
 
         return toReturn;
     }
@@ -9782,7 +9794,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
 /*!
 	Papa Parse
-	v4.3.5
+	v4.3.6
 	https://github.com/mholt/PapaParse
 	License: MIT
 */
@@ -10769,6 +10781,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 						// Find closing quote
 						var quoteSearch = input.indexOf(quoteChar, quoteSearch + 1);
 
+						//No other quotes are found - no other delimiters
 						if (quoteSearch === -1) {
 							if (!ignoreLastRow) {
 								// No closing quote... what a pity
@@ -10783,8 +10796,8 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 							return finish();
 						}
 
+						// Closing quote at EOF
 						if (quoteSearch === inputLen - 1) {
-							// Closing quote at EOF
 							var value = input.substring(cursor, quoteSearch).replace(quoteCharRegex, quoteChar);
 							return finish(value);
 						}
@@ -10795,8 +10808,8 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 							continue;
 						}
 
+						// Closing quote followed by delimiter
 						if (input[quoteSearch + 1] === delim) {
-							// Closing quote followed by delimiter
 							row.push(input.substring(cursor, quoteSearch).replace(quoteCharRegex, quoteChar));
 							cursor = quoteSearch + 1 + delimLen;
 							nextDelim = input.indexOf(delim, cursor);
@@ -10804,8 +10817,8 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 							break;
 						}
 
+						// Closing quote followed by newline
 						if (input.substr(quoteSearch + 1, newlineLen) === newline) {
-							// Closing quote followed by newline
 							row.push(input.substring(cursor, quoteSearch).replace(quoteCharRegex, quoteChar));
 							saveRow(quoteSearch + 1 + newlineLen);
 							nextDelim = input.indexOf(delim, cursor); // because we may have skipped the nextDelim in the quoted field
@@ -10819,6 +10832,18 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
 							break;
 						}
+
+						// Checks for valid closing quotes are complete (escaped quotes or quote followed by EOF/delimiter/newline) -- assume these quotes are part of an invalid text string
+						errors.push({
+							type: 'Quotes',
+							code: 'InvalidQuotes',
+							message: 'Trailing quote on quoted field is malformed',
+							row: data.length, // row has yet to be inserted
+							index: cursor
+						});
+
+						quoteSearch++;
+						continue;
 					}
 
 					continue;
@@ -11696,3 +11721,4 @@ function analyseMF(mf, options) {
 /***/ })
 /******/ ]);
 });
+//# sourceMappingURL=chemcalc-extended.js.map
