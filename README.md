@@ -67,6 +67,27 @@ ex:
 * combineMFs([["C","H$YY"],[],[""],["Cl","Br$XX"]])
 * combineMFs(["C.H.O","+,++",['Cl','Br$XX']])
 
+### enumerateMF(string|regexp, options)
+
+Enumerate molecules given a regular expression:
+
+Example: 
+
+```js
+var result = CE.enumerateMF('HCys(C(Gly|Ala10)|C{50,50}|C{90,10})OH');
+ /* 
+ result should be: 
+ [
+    'HCys(C(Ala10))OH',
+    'HCys(C(Gly))OH',
+    'HCys(C{50,50})OH',
+    'HCys(C{90,10})OH'
+ ]
+ */
+```
+
+The options are the same as [regexp-enumerator](https://github.com/cheminfo-js/regexp-enumerator) library
+
 ### getEutrophicationPotential
 
 getEutrophicationPotential(mf)
