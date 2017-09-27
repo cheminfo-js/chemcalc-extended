@@ -1,6 +1,6 @@
 /**
  * chemcalc-extended - chemcalc-extended project - extends chemcalc with new methods
- * @version v1.29.1
+ * @version v2.0.0
  * @link https://github.com/cheminfo-js/chemcalc-extended
  * @license MIT
  */
@@ -76,7 +76,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 14);
+/******/ 	return __webpack_require__(__webpack_require__.s = 17);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -4765,10 +4765,28 @@ return /******/ (function(modules) { // webpackBootstrap
 
     function noop() {}
 })(undefined);
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(15)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(18)))
 
 /***/ }),
 /* 1 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = {
+  ROOT: 0,
+  GROUP: 1,
+  POSITION: 2,
+  SET: 3,
+  RANGE: 4,
+  REPETITION: 5,
+  REFERENCE: 6,
+  CHAR: 7
+};
+
+/***/ }),
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4995,7 +5013,7 @@ module.exports = [
 }];
 
 /***/ }),
-/* 2 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5049,17 +5067,17 @@ function bestResults(results, bestOf, maxResults, minSimilarity) {
 };
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-exports.array = __webpack_require__(7);
-exports.matrix = __webpack_require__(24);
+exports.array = __webpack_require__(8);
+exports.matrix = __webpack_require__(27);
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5082,13 +5100,13 @@ function splitSequence(sequence) {
 module.exports = splitSequence;
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var initSimilarity = __webpack_require__(6).initSimilarity;
+var initSimilarity = __webpack_require__(7).initSimilarity;
 
 var CC = __webpack_require__(0);
 
@@ -5163,13 +5181,13 @@ MFProcessor.prototype.process = function (mf, result) {
 module.exports = MFProcessor;
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Similarity = __webpack_require__(23);
+var Similarity = __webpack_require__(26);
 
 module.exports.initSimilarity = function (context, options) {
     // we will copy the options to be sure ...
@@ -5194,7 +5212,7 @@ module.exports.initSimilarity = function (context, options) {
 };
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5684,7 +5702,7 @@ exports.cumulativeSum = function cumulativeSum(array) {
 };
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5814,7 +5832,7 @@ function wrap(superagent, Promise) {
 module.exports = wrap;
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5824,10 +5842,10 @@ module.exports = wrap;
  * Module dependencies.
  */
 
-var Emitter = __webpack_require__(26);
-var reduce = __webpack_require__(27);
-var requestBase = __webpack_require__(28);
-var isObject = __webpack_require__(10);
+var Emitter = __webpack_require__(29);
+var reduce = __webpack_require__(30);
+var requestBase = __webpack_require__(31);
+var isObject = __webpack_require__(11);
 
 /**
  * Root reference for iframes.
@@ -5879,7 +5897,7 @@ function isHost(obj) {
  * Expose `request`.
  */
 
-var request = module.exports = __webpack_require__(29).bind(null, Request);
+var request = module.exports = __webpack_require__(32).bind(null, Request);
 
 /**
  * Determine XHR.
@@ -6903,7 +6921,7 @@ request.put = function (url, data, fn) {
 };
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6924,16 +6942,16 @@ function isObject(obj) {
 module.exports = isObject;
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var request = __webpack_require__(8)(__webpack_require__(9), Promise);
-var Papa = __webpack_require__(32);
+var request = __webpack_require__(9)(__webpack_require__(10), Promise);
+var Papa = __webpack_require__(35);
 var CC = __webpack_require__(0);
-var combineMFs = __webpack_require__(12);
+var combineMFs = __webpack_require__(13);
 
 function getReferenceList(url, urlReferences) {
 
@@ -7083,14 +7101,14 @@ function getReferenceList(url, urlReferences) {
 module.exports = getReferenceList;
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var CC = __webpack_require__(0);
-var removeMFLastPart = __webpack_require__(33);
+var removeMFLastPart = __webpack_require__(36);
 
 // TODO replace from the value coming from chemcalc
 var ELECTRON_MASS = 5.4857990946e-4;
@@ -7321,13 +7339,347 @@ function getMF(mfs, currents, comment) {
 }
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var initSimilarity = __webpack_require__(6).initSimilarity;
+var util = __webpack_require__(39);
+var types = __webpack_require__(1);
+var sets = __webpack_require__(15);
+var positions = __webpack_require__(40);
+
+module.exports = function (regexpStr) {
+  var i = 0,
+      l,
+      c,
+      start = { type: types.ROOT, stack: [] },
+
+
+  // Keep track of last clause/group and stack.
+  lastGroup = start,
+      last = start.stack,
+      groupStack = [];
+
+  var repeatErr = function repeatErr(i) {
+    util.error(regexpStr, 'Nothing to repeat at column ' + (i - 1));
+  };
+
+  // Decode a few escaped characters.
+  var str = util.strToChars(regexpStr);
+  l = str.length;
+
+  // Iterate through each character in string.
+  while (i < l) {
+    c = str[i++];
+
+    switch (c) {
+      // Handle escaped characters, inclues a few sets.
+      case '\\':
+        c = str[i++];
+
+        switch (c) {
+          case 'b':
+            last.push(positions.wordBoundary());
+            break;
+
+          case 'B':
+            last.push(positions.nonWordBoundary());
+            break;
+
+          case 'w':
+            last.push(sets.words());
+            break;
+
+          case 'W':
+            last.push(sets.notWords());
+            break;
+
+          case 'd':
+            last.push(sets.ints());
+            break;
+
+          case 'D':
+            last.push(sets.notInts());
+            break;
+
+          case 's':
+            last.push(sets.whitespace());
+            break;
+
+          case 'S':
+            last.push(sets.notWhitespace());
+            break;
+
+          default:
+            // Check if c is integer.
+            // In which case it's a reference.
+            if (/\d/.test(c)) {
+              last.push({ type: types.REFERENCE, value: parseInt(c, 10) });
+
+              // Escaped character.
+            } else {
+              last.push({ type: types.CHAR, value: c.charCodeAt(0) });
+            }
+        }
+
+        break;
+
+      // Positionals.
+      case '^':
+        last.push(positions.begin());
+        break;
+
+      case '$':
+        last.push(positions.end());
+        break;
+
+      // Handle custom sets.
+      case '[':
+        // Check if this class is 'anti' i.e. [^abc].
+        var not;
+        if (str[i] === '^') {
+          not = true;
+          i++;
+        } else {
+          not = false;
+        }
+
+        // Get all the characters in class.
+        var classTokens = util.tokenizeClass(str.slice(i), regexpStr);
+
+        // Increase index by length of class.
+        i += classTokens[1];
+        last.push({
+          type: types.SET,
+          set: classTokens[0],
+          not: not
+        });
+
+        break;
+
+      // Class of any character except \n.
+      case '.':
+        last.push(sets.anyChar());
+        break;
+
+      // Push group onto stack.
+      case '(':
+        // Create group.
+        var group = {
+          type: types.GROUP,
+          stack: [],
+          remember: true
+        };
+
+        c = str[i];
+
+        // If if this is a special kind of group.
+        if (c === '?') {
+          c = str[i + 1];
+          i += 2;
+
+          // Match if followed by.
+          if (c === '=') {
+            group.followedBy = true;
+
+            // Match if not followed by.
+          } else if (c === '!') {
+            group.notFollowedBy = true;
+          } else if (c !== ':') {
+            util.error(regexpStr, 'Invalid group, character \'' + c + '\' after \'?\' at column ' + (i - 1));
+          }
+
+          group.remember = false;
+        }
+
+        // Insert subgroup into current group stack.
+        last.push(group);
+
+        // Remember the current group for when the group closes.
+        groupStack.push(lastGroup);
+
+        // Make this new group the current group.
+        lastGroup = group;
+        last = group.stack;
+        break;
+
+      // Pop group out of stack.
+      case ')':
+        if (groupStack.length === 0) {
+          util.error(regexpStr, 'Unmatched ) at column ' + (i - 1));
+        }
+        lastGroup = groupStack.pop();
+
+        // Check if this group has a PIPE.
+        // To get back the correct last stack.
+        last = lastGroup.options ? lastGroup.options[lastGroup.options.length - 1] : lastGroup.stack;
+        break;
+
+      // Use pipe character to give more choices.
+      case '|':
+        // Create array where options are if this is the first PIPE
+        // in this clause.
+        if (!lastGroup.options) {
+          lastGroup.options = [lastGroup.stack];
+          delete lastGroup.stack;
+        }
+
+        // Create a new stack and add to options for rest of clause.
+        var stack = [];
+        lastGroup.options.push(stack);
+        last = stack;
+        break;
+
+      // Repetition.
+      // For every repetition, remove last element from last stack
+      // then insert back a RANGE object.
+      // This design is chosen because there could be more than
+      // one repetition symbols in a regex i.e. `a?+{2,3}`.
+      case '{':
+        var rs = /^(\d+)(,(\d+)?)?\}/.exec(str.slice(i)),
+            min,
+            max;
+        if (rs !== null) {
+          if (last.length === 0) {
+            repeatErr(i);
+          }
+          min = parseInt(rs[1], 10);
+          max = rs[2] ? rs[3] ? parseInt(rs[3], 10) : Infinity : min;
+          i += rs[0].length;
+
+          last.push({
+            type: types.REPETITION,
+            min: min,
+            max: max,
+            value: last.pop()
+          });
+        } else {
+          last.push({
+            type: types.CHAR,
+            value: 123
+          });
+        }
+        break;
+
+      case '?':
+        if (last.length === 0) {
+          repeatErr(i);
+        }
+        last.push({
+          type: types.REPETITION,
+          min: 0,
+          max: 1,
+          value: last.pop()
+        });
+        break;
+
+      case '+':
+        if (last.length === 0) {
+          repeatErr(i);
+        }
+        last.push({
+          type: types.REPETITION,
+          min: 1,
+          max: Infinity,
+          value: last.pop()
+        });
+        break;
+
+      case '*':
+        if (last.length === 0) {
+          repeatErr(i);
+        }
+        last.push({
+          type: types.REPETITION,
+          min: 0,
+          max: Infinity,
+          value: last.pop()
+        });
+        break;
+
+      // Default is a character that is not `\[](){}?+*^$`.
+      default:
+        last.push({
+          type: types.CHAR,
+          value: c.charCodeAt(0)
+        });
+    }
+  }
+
+  // Check if any groups have not been closed.
+  if (groupStack.length !== 0) {
+    util.error(regexpStr, 'Unterminated group');
+  }
+
+  return start;
+};
+
+module.exports.types = types;
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var types = __webpack_require__(1);
+
+var INTS = function INTS() {
+  return [{ type: types.RANGE, from: 48, to: 57 }];
+};
+
+var WORDS = function WORDS() {
+  return [{ type: types.CHAR, value: 95 }, { type: types.RANGE, from: 97, to: 122 }, { type: types.RANGE, from: 65, to: 90 }].concat(INTS());
+};
+
+var WHITESPACE = function WHITESPACE() {
+  return [{ type: types.CHAR, value: 9 }, { type: types.CHAR, value: 10 }, { type: types.CHAR, value: 11 }, { type: types.CHAR, value: 12 }, { type: types.CHAR, value: 13 }, { type: types.CHAR, value: 32 }, { type: types.CHAR, value: 160 }, { type: types.CHAR, value: 5760 }, { type: types.CHAR, value: 6158 }, { type: types.CHAR, value: 8192 }, { type: types.CHAR, value: 8193 }, { type: types.CHAR, value: 8194 }, { type: types.CHAR, value: 8195 }, { type: types.CHAR, value: 8196 }, { type: types.CHAR, value: 8197 }, { type: types.CHAR, value: 8198 }, { type: types.CHAR, value: 8199 }, { type: types.CHAR, value: 8200 }, { type: types.CHAR, value: 8201 }, { type: types.CHAR, value: 8202 }, { type: types.CHAR, value: 8232 }, { type: types.CHAR, value: 8233 }, { type: types.CHAR, value: 8239 }, { type: types.CHAR, value: 8287 }, { type: types.CHAR, value: 12288 }, { type: types.CHAR, value: 65279 }];
+};
+
+var NOTANYCHAR = function NOTANYCHAR() {
+  return [{ type: types.CHAR, value: 10 }, { type: types.CHAR, value: 13 }, { type: types.CHAR, value: 8232 }, { type: types.CHAR, value: 8233 }];
+};
+
+// Predefined class objects.
+exports.words = function () {
+  return { type: types.SET, set: WORDS(), not: false };
+};
+
+exports.notWords = function () {
+  return { type: types.SET, set: WORDS(), not: true };
+};
+
+exports.ints = function () {
+  return { type: types.SET, set: INTS(), not: false };
+};
+
+exports.notInts = function () {
+  return { type: types.SET, set: INTS(), not: true };
+};
+
+exports.whitespace = function () {
+  return { type: types.SET, set: WHITESPACE(), not: false };
+};
+
+exports.notWhitespace = function () {
+  return { type: types.SET, set: WHITESPACE(), not: true };
+};
+
+exports.anyChar = function () {
+  return { type: types.SET, set: NOTANYCHAR(), not: true };
+};
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var initSimilarity = __webpack_require__(7).initSimilarity;
 
 /*
   We calculate the similarity between an experimental spectrum and a specific XY
@@ -7352,35 +7704,36 @@ SimilarityProcessor.prototype.process = function (spectrum, from, to) {
 module.exports = SimilarityProcessor;
 
 /***/ }),
-/* 14 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var CC = __webpack_require__(0);
-var PEP = __webpack_require__(16);
+var PEP = __webpack_require__(19);
 
-var bestResults = exports.bestResults = __webpack_require__(2);
-var MFProcessor = exports.MFProcessor = __webpack_require__(5);
-var getPubchemStats = __webpack_require__(25);
-var mfFromMonoisotopicMassPubchemPromise = __webpack_require__(30);
+var bestResults = exports.bestResults = __webpack_require__(3);
+var MFProcessor = exports.MFProcessor = __webpack_require__(6);
+var getPubchemStats = __webpack_require__(28);
+var mfFromMonoisotopicMassPubchemPromise = __webpack_require__(33);
 
-exports.getContaminantsReferenceList = __webpack_require__(31);
-exports.getReferenceList = __webpack_require__(11);
+exports.getContaminantsReferenceList = __webpack_require__(34);
+exports.getReferenceList = __webpack_require__(12);
 
-exports.combineMFs = __webpack_require__(12);
-exports.SimilarityProcessor = __webpack_require__(13);
-exports.MFSimilarityProcessor = __webpack_require__(34);
-var massPeakPicking = __webpack_require__(35);
+exports.combineMFs = __webpack_require__(13);
+exports.enumerateMF = __webpack_require__(37);
+exports.SimilarityProcessor = __webpack_require__(16);
+exports.MFSimilarityProcessor = __webpack_require__(42);
+var massPeakPicking = __webpack_require__(43);
 
 if (typeof self !== 'undefined') {
-    exports.MFProcessorWorker = __webpack_require__(36);
+    exports.MFProcessorWorker = __webpack_require__(44);
 }
 
 var CE = exports;
 
-CE.analyseMF = __webpack_require__(39);
+CE.analyseMF = __webpack_require__(47);
 CE.getInfo = CC.getInfo;
 CE.mfFromMonoisotopicMass = CC.mfFromMonoisotopicMass;
 
@@ -7515,7 +7868,7 @@ CE.massPeakPicking = massPeakPicking;
 CE.allowNeutralLoss = PEP.allowNeutralLoss;
 
 /***/ }),
-/* 15 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7543,19 +7896,19 @@ try {
 module.exports = g;
 
 /***/ }),
-/* 16 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var aa = __webpack_require__(1);
-var IEP = __webpack_require__(17);
-var chargePeptide = __webpack_require__(18);
-var allowNeutralLoss = __webpack_require__(20);
-var splitPeptide = __webpack_require__(4);
-var digestPeptide = __webpack_require__(21);
-var generatePeptideFragments = __webpack_require__(22);
+var aa = __webpack_require__(2);
+var IEP = __webpack_require__(20);
+var chargePeptide = __webpack_require__(21);
+var allowNeutralLoss = __webpack_require__(23);
+var splitPeptide = __webpack_require__(5);
+var digestPeptide = __webpack_require__(24);
+var generatePeptideFragments = __webpack_require__(25);
 
 exports.getInfo = function () {
     return aa;
@@ -7653,13 +8006,13 @@ exports.convertAASequence = function convertAASequence(mf) {
 };
 
 /***/ }),
-/* 17 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var aa = __webpack_require__(1);
+var aa = __webpack_require__(2);
 
 // we will convert the data to an object to be much faster
 var aaObject = {};
@@ -7790,13 +8143,13 @@ module.exports = {
 };
 
 /***/ }),
-/* 18 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var getAA = __webpack_require__(19);
+var getAA = __webpack_require__(22);
 
 // SOURCE: https://en.wikipedia.org/wiki/Amino_acid
 
@@ -7850,13 +8203,13 @@ function chargeOnePeptide(mf, options) {
 module.exports = chargePeptide;
 
 /***/ }),
-/* 19 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var aa = __webpack_require__(1);
+var aa = __webpack_require__(2);
 
 function getAA(code) {
     if (code.length === 1) {
@@ -7878,7 +8231,7 @@ function getAA(code) {
 module.exports = getAA;
 
 /***/ }),
-/* 20 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7905,13 +8258,13 @@ function allowOneNeutralLoss(mf, options) {
 module.exports = allowNeutralLoss;
 
 /***/ }),
-/* 21 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var splitSequence = __webpack_require__(4);
+var splitSequence = __webpack_require__(5);
 
 /*
 Iotuibs:
@@ -7999,7 +8352,7 @@ function getRegexp(enzyme) {
 module.exports = digestSequence;
 
 /***/ }),
-/* 22 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8079,7 +8432,7 @@ function addCTerm(mfs, cTerm, i, options) {
 }
 
 /***/ }),
-/* 23 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8090,7 +8443,7 @@ var COMMON_FIRST = 1;
 var COMMON_SECOND = 2;
 var COMMON_BOTH = 3; // should be a binary operation !
 
-var Stat = __webpack_require__(3).array;
+var Stat = __webpack_require__(4).array;
 
 module.exports = function Comparator(options) {
 
@@ -8521,13 +8874,13 @@ function calculateOverlapFromDiff(diffs) {
 }
 
 /***/ }),
-/* 24 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var arrayStat = __webpack_require__(7);
+var arrayStat = __webpack_require__(8);
 
 function compareNumbers(a, b) {
     return a - b;
@@ -9175,13 +9528,13 @@ exports.weightedScatter = function weightedScatter(matrix, weights, means, facto
 };
 
 /***/ }),
-/* 25 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var request = __webpack_require__(8)(__webpack_require__(9), Promise);
+var request = __webpack_require__(9)(__webpack_require__(10), Promise);
 
 function getPubchemStats(id) {
     return request.get('https://pubchem.cheminfo.org/mfStats/search?id=' + id).then(function (results) {
@@ -9192,7 +9545,7 @@ function getPubchemStats(id) {
 module.exports = getPubchemStats;
 
 /***/ }),
-/* 26 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9357,7 +9710,7 @@ Emitter.prototype.hasListeners = function (event) {
 };
 
 /***/ }),
-/* 27 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9386,7 +9739,7 @@ module.exports = function (arr, fn, initial) {
 };
 
 /***/ }),
-/* 28 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9395,7 +9748,7 @@ module.exports = function (arr, fn, initial) {
 /**
  * Module of mixed-in functions shared between node and client code
  */
-var isObject = __webpack_require__(10);
+var isObject = __webpack_require__(11);
 
 /**
  * Clear previous timeout.
@@ -9559,7 +9912,7 @@ exports.field = function (name, val) {
 };
 
 /***/ }),
-/* 29 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9599,15 +9952,15 @@ function request(RequestConstructor, method, url) {
 module.exports = request;
 
 /***/ }),
-/* 30 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var CC = __webpack_require__(0);
-var MFProcessor = exports.MFProcessor = __webpack_require__(5);
-var bestResults = exports.bestResults = __webpack_require__(2);
+var MFProcessor = exports.MFProcessor = __webpack_require__(6);
+var bestResults = exports.bestResults = __webpack_require__(3);
 
 /*
  mfFromMonoisotopicMassPubchem
@@ -9771,13 +10124,13 @@ function addRatiosScore(result, stats) {
 module.exports = mfFromMonoisotopicMassPubchemPromise;
 
 /***/ }),
-/* 31 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var getReferenceList = __webpack_require__(11);
+var getReferenceList = __webpack_require__(12);
 
 function getContaminantsReferenceList() {
     return getReferenceList('https://googledocs.cheminfo.org/spreadsheets/d/1LrJCl9-xSZKhGA9Y8nKVkYwB-mEOHBkTXg5qYXeFpZY/export?format=tsv', 'https://googledocs.cheminfo.org/spreadsheets/d/1C_H9aiJyu9M9in7sHMOaz-d3Sv758rE72oLxEKH9ioA/export?format=tsv');
@@ -9786,7 +10139,7 @@ function getContaminantsReferenceList() {
 module.exports = getContaminantsReferenceList;
 
 /***/ }),
-/* 32 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11066,7 +11419,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 });
 
 /***/ }),
-/* 33 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11111,15 +11464,396 @@ module.exports = function (mf) {
 };
 
 /***/ }),
-/* 34 */
+/* 37 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var enumerateRegExp = __webpack_require__(38);
+
+/**
+ * Enumerate molecules given a regular expression.
+ * @param {string|RegExp} regexp - Regular expression to enumerate
+ * @param {object} options - same parameters as [regexp-enumerator](https://cheminfo-js.github.io/regexp-enumerator/)
+ * @return {Array} - Array of molecules generated with the regular expression.
+ */
+function enumerateMF(regexp, options) {
+    options = options || {};
+    var source = preprocessRegExp(typeof regexp !== 'string' ? regexp.source : regexp);
+    var output = enumerateRegExp(source, options);
+    output = postProcess(output);
+    return output;
+}
+
+module.exports = enumerateMF;
+
+function preprocessRegExp(string) {
+    var replace = [/\(/g, /\)/g, /{/g, /}/g];
+    var to = ['(\\((', ')\\))', '\\{', '\\}'];
+
+    for (var i = 0; i < replace.length; i++) {
+        string = string.replace(replace[i], to[i]);
+    }
+
+    return string;
+}
+
+function postProcess(output) {
+    return output.map(elem => elem.replace(/\(\)/g, ''));
+}
+
+/***/ }),
+/* 38 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = enumerateRegExp;
+
+var _ret = __webpack_require__(14);
+
+var _ret2 = _interopRequireDefault(_ret);
+
+var _utils = __webpack_require__(41);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * Function that generates all possible strings given a regular expression.
+ * @param {string|regexp} regexp - regular expression to use
+ * @param {object} options
+ * @param {regexp} [options.universe=/[a-z]/] - universe of letters allowed for the 'not' operator.
+ * @param {number} [options.maxSize=10] - max string size of the generated output.
+ * @return {Array} - generated string given the regular expression.
+ */
+function enumerateRegExp(regexp, options = {}) {
+    var _options$maxSize = options.maxSize,
+        maxSize = _options$maxSize === undefined ? 10 : _options$maxSize,
+        _options$universe = options.universe,
+        universe = _options$universe === undefined ? /[a-z]/ : _options$universe;
+
+
+    var source = typeof regexp === 'string' ? regexp : regexp.source;
+    var tokens = (0, _ret2.default)(source);
+
+    var charSetTokens = (0, _ret2.default)(universe.source);
+
+    if (charSetTokens.stack[0].set) {
+        var charMap = (0, _utils.createRegexpMap)(charSetTokens.stack[0].set);
+    } else {
+        charMap = (0, _utils.createCharMap)(charSetTokens.stack);
+    }
+
+    return generate(tokens, [''], {
+        tokens: tokens,
+        charMap: charMap,
+        infSize: maxSize
+    });
+}
+
+/**
+ * @private
+ * Generate recursively all the possible string from the given tokens.
+ * @param {object} tokens - current regexp tokens to process.
+ * @param {Array} build - array of strings build until the current recursive call.
+ * @param {object} common - common elements for each recursive call.
+ * @return {Array} - current possible combination given the build.
+ */
+
+function generate(tokens, build, common) {
+    var isGroup = tokens.type === _ret2.default.types.ROOT || tokens.type === _ret2.default.types.GROUP;
+    var newBuild = [];
+
+    if (tokens.options) {
+        var options = tokens.options;
+        for (var i = 0; i < options.length; ++i) {
+            (0, _utils.pushArray)(newBuild, generate(options[i], build, common));
+        }
+        build = newBuild;
+    } else {
+        var stack = isGroup ? tokens.stack : tokens;
+        for (i = 0; i < stack.length; ++i) {
+            var currentToken = stack[i];
+            newBuild = [];
+
+            switch (currentToken.type) {
+                case _ret2.default.types.CHAR:
+                    var str = String.fromCharCode(currentToken.value);
+                    (0, _utils.pushArray)(newBuild, build.map(a => a + str));
+                    break;
+                case _ret2.default.types.SET:
+                    var tokenSet;
+                    if (currentToken.not) {
+                        var currentTokenMap = (0, _utils.createRegexpMap)(currentToken.set);
+                        var universe = Object.keys(common.charMap);
+                        var availableTokens = [];
+                        for (var j = 0; j < universe.length; ++j) {
+                            var universeToken = universe[j];
+                            if (currentTokenMap[universeToken] === undefined) {
+                                availableTokens.push(common.charMap[universeToken]);
+                            }
+                        }
+                        tokenSet = availableTokens;
+                    } else {
+                        tokenSet = currentToken.set;
+                    }
+
+                    for (j = 0; j < tokenSet.length; ++j) {
+                        (0, _utils.pushArray)(newBuild, generate([tokenSet[j]], build, common));
+                    }
+                    break;
+                case _ret2.default.types.GROUP:
+                    (0, _utils.pushArray)(newBuild, generate(currentToken, build, common));
+                    break;
+                case _ret2.default.types.RANGE:
+                    for (j = currentToken.from; j <= currentToken.to; ++j) {
+                        var currentChar = String.fromCharCode(j);
+                        (0, _utils.pushArray)(newBuild, build.map(elem => elem + currentChar));
+                    }
+                    break;
+                case _ret2.default.types.REPETITION:
+                    j = 0;
+                    newBuild = build;
+                    for (; j < currentToken.min; ++j) {
+                        build = newBuild = generate([currentToken.value], build, common);
+                    }
+
+                    // from min to max
+                    var max = currentToken.max !== Infinity ? currentToken.max : common.infSize;
+                    for (; j < max; ++j) {
+                        (0, _utils.pushArray)(newBuild, generate([currentToken.value], newBuild, common));
+                    }
+
+                    newBuild = Array.from(new Set(newBuild));
+                    break;
+                case _ret2.default.types.POSITION:
+                    // case for '$' '^', don't touch the previous build
+                    continue;
+                default:
+                    throw new Error('Unsupported type:', currentToken.type);
+            }
+
+            build = newBuild;
+        }
+    }
+
+    return build;
+}
+
+/***/ }),
+/* 39 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var types = __webpack_require__(1);
+var sets = __webpack_require__(15);
+
+// All of these are private and only used by randexp.
+// It's assumed that they will always be called with the correct input.
+
+var CTRL = '@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^ ?';
+var SLSH = { '0': 0, 't': 9, 'n': 10, 'v': 11, 'f': 12, 'r': 13 };
+
+/**
+ * Finds character representations in str and convert all to
+ * their respective characters
+ *
+ * @param {String} str
+ * @return {String}
+ */
+exports.strToChars = function (str) {
+  /* jshint maxlen: false */
+  var chars_regex = /(\[\\b\])|(\\)?\\(?:u([A-F0-9]{4})|x([A-F0-9]{2})|(0?[0-7]{2})|c([@A-Z\[\\\]\^?])|([0tnvfr]))/g;
+  str = str.replace(chars_regex, function (s, b, lbs, a16, b16, c8, dctrl, eslsh) {
+    if (lbs) {
+      return s;
+    }
+
+    var code = b ? 8 : a16 ? parseInt(a16, 16) : b16 ? parseInt(b16, 16) : c8 ? parseInt(c8, 8) : dctrl ? CTRL.indexOf(dctrl) : SLSH[eslsh];
+
+    var c = String.fromCharCode(code);
+
+    // Escape special regex characters.
+    if (/[\[\]{}\^$.|?*+()]/.test(c)) {
+      c = '\\' + c;
+    }
+
+    return c;
+  });
+
+  return str;
+};
+
+/**
+ * turns class into tokens
+ * reads str until it encounters a ] not preceeded by a \
+ *
+ * @param {String} str
+ * @param {String} regexpStr
+ * @return {Array.<Array.<Object>, Number>}
+ */
+exports.tokenizeClass = function (str, regexpStr) {
+  /* jshint maxlen: false */
+  var tokens = [];
+  var regexp = /\\(?:(w)|(d)|(s)|(W)|(D)|(S))|((?:(?:\\)(.)|([^\]\\]))-(?:\\)?([^\]]))|(\])|(?:\\)?(.)/g;
+  var rs, c;
+
+  while ((rs = regexp.exec(str)) != null) {
+    if (rs[1]) {
+      tokens.push(sets.words());
+    } else if (rs[2]) {
+      tokens.push(sets.ints());
+    } else if (rs[3]) {
+      tokens.push(sets.whitespace());
+    } else if (rs[4]) {
+      tokens.push(sets.notWords());
+    } else if (rs[5]) {
+      tokens.push(sets.notInts());
+    } else if (rs[6]) {
+      tokens.push(sets.notWhitespace());
+    } else if (rs[7]) {
+      tokens.push({
+        type: types.RANGE,
+        from: (rs[8] || rs[9]).charCodeAt(0),
+        to: rs[10].charCodeAt(0)
+      });
+    } else if (c = rs[12]) {
+      tokens.push({
+        type: types.CHAR,
+        value: c.charCodeAt(0)
+      });
+    } else {
+      return [tokens, regexp.lastIndex];
+    }
+  }
+
+  exports.error(regexpStr, 'Unterminated character class');
+};
+
+/**
+ * Shortcut to throw errors.
+ *
+ * @param {String} regexp
+ * @param {String} msg
+ */
+exports.error = function (regexp, msg) {
+  throw new SyntaxError('Invalid regular expression: /' + regexp + '/: ' + msg);
+};
+
+/***/ }),
+/* 40 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var types = __webpack_require__(1);
+
+exports.wordBoundary = function () {
+  return { type: types.POSITION, value: 'b' };
+};
+
+exports.nonWordBoundary = function () {
+  return { type: types.POSITION, value: 'B' };
+};
+
+exports.begin = function () {
+  return { type: types.POSITION, value: '^' };
+};
+
+exports.end = function () {
+  return { type: types.POSITION, value: '$' };
+};
+
+/***/ }),
+/* 41 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.createCharMap = createCharMap;
+exports.createRegexpMap = createRegexpMap;
+exports.pushArray = pushArray;
+
+var _ret = __webpack_require__(14);
+
+var _ret2 = _interopRequireDefault(_ret);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var allowedTypes = [_ret2.default.types.CHAR];
+var call = {};
+call[_ret2.default.types.CHAR] = onChar;
+
+function createCharMap(tokens) {
+    var map = {};
+    for (var i = 0; i < tokens.length; ++i) {
+        var currentToken = tokens[i];
+        if (!allowedTypes.includes(currentToken.type)) {
+            throw new RangeError('universe must be a regexp of letters');
+        }
+
+        call[currentToken.type](map, currentToken);
+    }
+
+    return map;
+}
+
+// only support chars and ranges
+function createRegexpMap(set) {
+    var map = {};
+    for (var i = 0; i < set.length; ++i) {
+        var currentToken = set[i];
+        switch (currentToken.type) {
+            case _ret2.default.types.CHAR:
+                map[currentToken.value] = currentToken;
+                break;
+            case _ret2.default.types.RANGE:
+                for (var j = currentToken.from; j <= currentToken.to; ++j) {
+                    map[j] = {
+                        type: _ret2.default.types.CHAR,
+                        value: j
+                    };
+                }
+                break;
+            default:
+        }
+    }
+
+    return map;
+}
+
+function pushArray(arr, toPush) {
+    for (var i = 0; i < toPush.length; ++i) {
+        arr.push(toPush[i]);
+    }
+}
+
+function onChar(map, token) {
+    map[token.value] = token;
+}
+
+/***/ }),
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var CC = __webpack_require__(0);
-var SimilarityProcessor = __webpack_require__(13);
-var Stat = __webpack_require__(3).array;
+var SimilarityProcessor = __webpack_require__(16);
+var Stat = __webpack_require__(4).array;
 
 /*
 
@@ -11172,13 +11906,13 @@ MFSimilarityProcessor.prototype.process = function (firstX) {
 module.exports = MFSimilarityProcessor;
 
 /***/ }),
-/* 35 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Stat = __webpack_require__(3);
+var Stat = __webpack_require__(4);
 
 module.exports = massPeakPicking;
 
@@ -11299,15 +12033,15 @@ function gsd(x, y, options) {
 }
 
 /***/ }),
-/* 36 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var WorkerManager = __webpack_require__(37);
+var WorkerManager = __webpack_require__(45);
 
-var bestResults = __webpack_require__(2);
+var bestResults = __webpack_require__(3);
 
 module.exports = MFProcessorWorker;
 
@@ -11387,13 +12121,13 @@ function insideMFProcessor() {
 }
 
 /***/ }),
-/* 37 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var workerTemplate = __webpack_require__(38);
+var workerTemplate = __webpack_require__(46);
 
 var CORES = navigator.hardwareConcurrency || 1;
 
@@ -11601,7 +12335,7 @@ WorkerManager.prototype.post = function (event, args, id) {
 module.exports = WorkerManager;
 
 /***/ }),
-/* 38 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -11652,7 +12386,7 @@ exports.newWorkerURL = function newWorkerURL(code, deps) {
 };
 
 /***/ }),
-/* 39 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
