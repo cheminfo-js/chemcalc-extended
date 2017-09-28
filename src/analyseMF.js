@@ -13,8 +13,18 @@ function analyseMF(mf, options) {
             if (! atoms[atom.element]) {
                 atoms[atom.element]=0;
             }
-            atoms[atom.element]+=atom.number;
+            atoms[atom.element]+=atom.number*part.number;
         }
     }
+
+    if (result.parts.length>1) {
+        var totalMF=[];
+        for (var atom of Object.keys(result.atoms)) {
+            var number=result.atoms[atom];
+            totalMF.push(atom+((number!==1) ? number : '') );
+        }
+        result.totalMF=totalMF.join('');
+    }
+
     return result;
 };
