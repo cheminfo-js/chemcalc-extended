@@ -1,6 +1,6 @@
 /**
  * chemcalc-extended - chemcalc-extended project - extends chemcalc with new methods
- * @version v2.1.0
+ * @version v2.1.1
  * @link https://github.com/cheminfo-js/chemcalc-extended
  * @license MIT
  */
@@ -13,7 +13,7 @@
 		exports["chemcalcExtended"] = factory();
 	else
 		root["chemcalcExtended"] = factory();
-})(this, function() {
+})(typeof self !== 'undefined' ? self : this, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -6969,7 +6969,7 @@ function getReferenceList(url, urlReferences) {
         var contaminants = Papa.parse(tsv, {
             delimiter: "\t",
             header: true
-        }).data;
+        }).data.filter(e => e.mf);
 
         if (tsvReferences) {
             var referencesArray = Papa.parse(tsvReferences, {
@@ -6985,97 +6985,34 @@ function getReferenceList(url, urlReferences) {
 
         var results = [];
 
-        var _iteratorNormalCompletion = true;
-        var _didIteratorError = false;
-        var _iteratorError = undefined;
-
-        try {
-            for (var _iterator = contaminants[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                var contaminant = _step.value;
-
-                if (tsvReferences) {
-                    // we add references
-                    var refs = contaminant.references.split(/[ ,]+/);
-                    contaminant.references = [];
-                    var _iteratorNormalCompletion2 = true;
-                    var _didIteratorError2 = false;
-                    var _iteratorError2 = undefined;
-
-                    try {
-                        for (var _iterator2 = refs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-                            var ref = _step2.value;
-
-                            contaminant.references.push(references[ref]);
-                        }
-                    } catch (err) {
-                        _didIteratorError2 = true;
-                        _iteratorError2 = err;
-                    } finally {
-                        try {
-                            if (!_iteratorNormalCompletion2 && _iterator2.return) {
-                                _iterator2.return();
-                            }
-                        } finally {
-                            if (_didIteratorError2) {
-                                throw _iteratorError2;
-                            }
-                        }
-                    }
-                }
-
-                // we need to calculate all the possibilities
-                var mfs = combineMFs([contaminant.mf, contaminant.modif]);
-                var _iteratorNormalCompletion3 = true;
-                var _didIteratorError3 = false;
-                var _iteratorError3 = undefined;
-
-                try {
-                    for (var _iterator3 = mfs[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-                        var mf = _step3.value;
-
-                        mf.info = contaminant;
-                        if (!contaminant.ESI && !contaminant.MALDI && !contaminant.positive && !contaminant.negative) {
-                            mf.ESI = true;
-                            mf.MALDI = true;
-                            mf.positive = true;
-                            mf.negative = true;
-                        } else {
-                            mf.ESI = contaminant.ESI === 'X' ? true : false;
-                            mf.MALDI = contaminant.MALDI === 'X' ? true : false;
-                            mf.positive = contaminant.positive === 'X' ? true : false;
-                            mf.negative = contaminant.negative === 'X' ? true : false;
-                        }
-                        mf.similarity = '';
-                        mf.mf = CC.analyseMF(mf.mf).mf;
-                        results.push(mf);
-                    }
-                } catch (err) {
-                    _didIteratorError3 = true;
-                    _iteratorError3 = err;
-                } finally {
-                    try {
-                        if (!_iteratorNormalCompletion3 && _iterator3.return) {
-                            _iterator3.return();
-                        }
-                    } finally {
-                        if (_didIteratorError3) {
-                            throw _iteratorError3;
-                        }
-                    }
+        for (var contaminant of contaminants) {
+            if (tsvReferences) {
+                // we add references
+                var refs = contaminant.references.split(/[ ,]+/);
+                contaminant.references = [];
+                for (var ref of refs) {
+                    contaminant.references.push(references[ref]);
                 }
             }
-        } catch (err) {
-            _didIteratorError = true;
-            _iteratorError = err;
-        } finally {
-            try {
-                if (!_iteratorNormalCompletion && _iterator.return) {
-                    _iterator.return();
+
+            // we need to calculate all the possibilities
+            var mfs = combineMFs([contaminant.mf, contaminant.modif]);
+            for (var mf of mfs) {
+                mf.info = contaminant;
+                if (!contaminant.ESI && !contaminant.MALDI && !contaminant.positive && !contaminant.negative) {
+                    mf.ESI = true;
+                    mf.MALDI = true;
+                    mf.positive = true;
+                    mf.negative = true;
+                } else {
+                    mf.ESI = contaminant.ESI === 'X' ? true : false;
+                    mf.MALDI = contaminant.MALDI === 'X' ? true : false;
+                    mf.positive = contaminant.positive === 'X' ? true : false;
+                    mf.negative = contaminant.negative === 'X' ? true : false;
                 }
-            } finally {
-                if (_didIteratorError) {
-                    throw _iteratorError;
-                }
+                mf.similarity = '';
+                mf.mf = CC.analyseMF(mf.mf).mf;
+                results.push(mf);
             }
         }
 
@@ -9996,33 +9933,11 @@ function addAtoms(result) {
     var mf = result.mf;
     var parts = mf.split(/(?=[A-Z])/);
     var atoms = {};
-    var _iteratorNormalCompletion = true;
-    var _didIteratorError = false;
-    var _iteratorError = undefined;
-
-    try {
-        for (var _iterator = parts[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            var part = _step.value;
-
-            var label = part.replace(/[0-9]/g, '');
-            var number = part.replace(/[^0-9]/g, '') * 1 || 1;
-            atoms[label] = number;
-        }
-    } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-    } finally {
-        try {
-            if (!_iteratorNormalCompletion && _iterator.return) {
-                _iterator.return();
-            }
-        } finally {
-            if (_didIteratorError) {
-                throw _iteratorError;
-            }
-        }
+    for (var part of parts) {
+        var label = part.replace(/[0-9]/g, '');
+        var number = part.replace(/[^0-9]/g, '') * 1 || 1;
+        atoms[label] = number;
     }
-
     result.atoms = atoms;
 }
 
@@ -10062,29 +9977,8 @@ function addRatios(result, stats) {
 }
 
 function getStatsForMass(targetMass, allStats) {
-    var _iteratorNormalCompletion2 = true;
-    var _didIteratorError2 = false;
-    var _iteratorError2 = undefined;
-
-    try {
-        for (var _iterator2 = allStats[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-            var stats = _step2.value;
-
-            if (targetMass >= stats.minMass && targetMass < stats.maxMass) return stats;
-        }
-    } catch (err) {
-        _didIteratorError2 = true;
-        _iteratorError2 = err;
-    } finally {
-        try {
-            if (!_iteratorNormalCompletion2 && _iterator2.return) {
-                _iterator2.return();
-            }
-        } finally {
-            if (_didIteratorError2) {
-                throw _iteratorError2;
-            }
-        }
+    for (var stats of allStats) {
+        if (targetMass >= stats.minMass && targetMass < stats.maxMass) return stats;
     }
 }
 
@@ -10147,7 +10041,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
 /*!
 	Papa Parse
-	v4.3.6
+	v4.3.7
 	https://github.com/mholt/PapaParse
 	License: MIT
 */
@@ -10708,7 +10602,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 		};
 
 		this._chunkError = function () {
-			this._sendError(reader.error);
+			this._sendError(reader.error.message);
 		};
 	}
 	FileStreamer.prototype = Object.create(ChunkStreamer.prototype);
@@ -11059,7 +10953,12 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 		var step = config.step;
 		var preview = config.preview;
 		var fastMode = config.fastMode;
-		var quoteChar = config.quoteChar || '"';
+		/** Allows for no quoteChar by setting quoteChar to undefined in config */
+		if (config.quoteChar === undefined) {
+			var quoteChar = '"';
+		} else {
+			var quoteChar = config.quoteChar;
+		}
 
 		// Delimiter must be valid
 		if (typeof delim !== 'string' || Papa.BAD_DELIMITERS.indexOf(delim) > -1) delim = ',';
@@ -12203,49 +12102,28 @@ WorkerManager.prototype._onmessage = function (worker, event) {
 };
 
 WorkerManager.prototype._exec = function () {
-    var _iteratorNormalCompletion = true;
-    var _didIteratorError = false;
-    var _iteratorError = undefined;
-
-    try {
-        for (var _iterator = this._workers.keys()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            var worker = _step.value;
-
-            if (this._working === this._numWorkers || this._waiting.length === 0) {
-                return;
-            }
-            if (!worker.running) {
-                for (var i = 0; i < this._waiting.length; i++) {
-                    var execInfo = this._waiting[i];
-                    if (typeof execInfo[3] === 'number' && execInfo[3] !== worker.id) {
-                        // this message is intended to another worker, let's ignore it
-                        continue;
-                    }
-                    this._waiting.splice(i, 1);
-                    worker.postMessage({
-                        action: 'exec',
-                        event: execInfo[0],
-                        args: execInfo[1]
-                    });
-                    worker.running = true;
-                    worker.time = Date.now();
-                    this._workers.set(worker, execInfo[2]);
-                    this._working++;
-                    break;
-                }
-            }
+    for (var worker of this._workers.keys()) {
+        if (this._working === this._numWorkers || this._waiting.length === 0) {
+            return;
         }
-    } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-    } finally {
-        try {
-            if (!_iteratorNormalCompletion && _iterator.return) {
-                _iterator.return();
-            }
-        } finally {
-            if (_didIteratorError) {
-                throw _iteratorError;
+        if (!worker.running) {
+            for (var i = 0; i < this._waiting.length; i++) {
+                var execInfo = this._waiting[i];
+                if (typeof execInfo[3] === 'number' && execInfo[3] !== worker.id) {
+                    // this message is intended to another worker, let's ignore it
+                    continue;
+                }
+                this._waiting.splice(i, 1);
+                worker.postMessage({
+                    action: 'exec',
+                    event: execInfo[0],
+                    args: execInfo[1]
+                });
+                worker.running = true;
+                worker.time = Date.now();
+                this._workers.set(worker, execInfo[2]);
+                this._working++;
+                break;
             }
         }
     }
@@ -12253,34 +12131,12 @@ WorkerManager.prototype._exec = function () {
 
 WorkerManager.prototype.terminate = function () {
     if (this._terminated) return;
-    var _iteratorNormalCompletion2 = true;
-    var _didIteratorError2 = false;
-    var _iteratorError2 = undefined;
-
-    try {
-        for (var _iterator2 = this._workers[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-            var entry = _step2.value;
-
-            entry[0].terminate();
-            if (entry[1]) {
-                entry[1][1](new Error('Terminated'));
-            }
-        }
-    } catch (err) {
-        _didIteratorError2 = true;
-        _iteratorError2 = err;
-    } finally {
-        try {
-            if (!_iteratorNormalCompletion2 && _iterator2.return) {
-                _iterator2.return();
-            }
-        } finally {
-            if (_didIteratorError2) {
-                throw _iteratorError2;
-            }
+    for (var entry of this._workers) {
+        entry[0].terminate();
+        if (entry[1]) {
+            entry[1][1](new Error('Terminated'));
         }
     }
-
     this._workers.clear();
     this._waiting = [];
     this._working = 0;
@@ -12290,31 +12146,9 @@ WorkerManager.prototype.terminate = function () {
 WorkerManager.prototype.postAll = function (event, args) {
     if (this._terminated) throw new Error('Cannot post (terminated)');
     var promises = [];
-    var _iteratorNormalCompletion3 = true;
-    var _didIteratorError3 = false;
-    var _iteratorError3 = undefined;
-
-    try {
-        for (var _iterator3 = this._workers.keys()[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-            var worker = _step3.value;
-
-            promises.push(this.post(event, args, worker.id));
-        }
-    } catch (err) {
-        _didIteratorError3 = true;
-        _iteratorError3 = err;
-    } finally {
-        try {
-            if (!_iteratorNormalCompletion3 && _iterator3.return) {
-                _iterator3.return();
-            }
-        } finally {
-            if (_didIteratorError3) {
-                throw _iteratorError3;
-            }
-        }
+    for (var worker of this._workers.keys()) {
+        promises.push(this.post(event, args, worker.id));
     }
-
     return Promise.all(promises);
 };
 
@@ -12399,84 +12233,21 @@ function analyseMF(mf, options) {
     var result = CC.analyseMF(mf, options);
     var atoms = {};
     result.atoms = atoms;
-    var _iteratorNormalCompletion = true;
-    var _didIteratorError = false;
-    var _iteratorError = undefined;
-
-    try {
-        for (var _iterator = result.parts[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            var part = _step.value;
-            var _iteratorNormalCompletion3 = true;
-            var _didIteratorError3 = false;
-            var _iteratorError3 = undefined;
-
-            try {
-                for (var _iterator3 = part.ea[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-                    var atom = _step3.value;
-
-                    if (!atoms[atom.element]) {
-                        atoms[atom.element] = 0;
-                    }
-                    atoms[atom.element] += atom.number * part.number;
-                }
-            } catch (err) {
-                _didIteratorError3 = true;
-                _iteratorError3 = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion3 && _iterator3.return) {
-                        _iterator3.return();
-                    }
-                } finally {
-                    if (_didIteratorError3) {
-                        throw _iteratorError3;
-                    }
-                }
+    for (var part of result.parts) {
+        for (var atom of part.ea) {
+            if (!atoms[atom.element]) {
+                atoms[atom.element] = 0;
             }
-        }
-    } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-    } finally {
-        try {
-            if (!_iteratorNormalCompletion && _iterator.return) {
-                _iterator.return();
-            }
-        } finally {
-            if (_didIteratorError) {
-                throw _iteratorError;
-            }
+            atoms[atom.element] += atom.number * part.number;
         }
     }
 
     if (result.parts.length > 1) {
         var totalMF = [];
-        var _iteratorNormalCompletion2 = true;
-        var _didIteratorError2 = false;
-        var _iteratorError2 = undefined;
-
-        try {
-            for (var _iterator2 = Object.keys(result.atoms)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-                var atom = _step2.value;
-
-                var number = result.atoms[atom];
-                totalMF.push(atom + (number !== 1 ? number : ''));
-            }
-        } catch (err) {
-            _didIteratorError2 = true;
-            _iteratorError2 = err;
-        } finally {
-            try {
-                if (!_iteratorNormalCompletion2 && _iterator2.return) {
-                    _iterator2.return();
-                }
-            } finally {
-                if (_didIteratorError2) {
-                    throw _iteratorError2;
-                }
-            }
+        for (var atom of Object.keys(result.atoms)) {
+            var number = result.atoms[atom];
+            totalMF.push(atom + (number !== 1 ? number : ''));
         }
-
         result.totalMF = totalMF.join('');
     }
 

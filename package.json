@@ -1,6 +1,6 @@
 {
   "name": "chemcalc-extended",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "chemcalc-extended project - extends chemcalc with new methods",
   "keywords": [
     "chemcalc-extended",
@@ -30,7 +30,7 @@
     "build": "cheminfo build --no-uglify"
   },
   "devDependencies": {
-    "cheminfo-tools": "^1.0.4",
+    "cheminfo-tools": "^1.20.2",
     "istanbul": "^0.3.19",
     "mocha": "^2.2.5",
     "mocha-better-spec-reporter": "^2.1.1",
@@ -39,7 +39,7 @@
   "dependencies": {
     "chemcalc": "^3.4.1",
     "ml-stat": "^1.0.1",
-    "papaparse": "^4.1.2",
+    "papaparse": "^4.3.7",
     "peaks-similarity": "^2.3.0",
     "peptide": "^1.5.2",
     "regexp-enumerator": "^1.0.0",
