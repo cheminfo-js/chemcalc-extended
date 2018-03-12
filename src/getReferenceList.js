@@ -14,7 +14,7 @@ function getReferenceList(url, urlReferences) {
         });
     } else {
         return Promise.all([
-            request.get(url).end(),
+            request.get(url).end()
         ]).then(function (results) {
             return parse(results[0].text);
         });
@@ -26,7 +26,7 @@ function getReferenceList(url, urlReferences) {
                 delimiter:"\t",
                 header: true
             }
-        ).data;
+        ).data.filter( (e) => e.mf);
 
         if (tsvReferences) {
             var referencesArray=Papa.parse(tsvReferences,
