@@ -1,6 +1,6 @@
 {
   "name": "chemcalc-extended",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "chemcalc-extended project - extends chemcalc with new methods",
   "keywords": [
     "chemcalc-extended",
@@ -40,8 +40,8 @@
     "chemcalc": "^3.4.1",
     "ml-stat": "^1.0.1",
     "papaparse": "^4.3.7",
-    "peaks-similarity": "^2.3.0",
-    "peptide": "^1.5.2",
+    "peaks-similarity": "^2.3.1",
+    "peptide": "^1.6.2",
     "regexp-enumerator": "^1.0.0",
     "superagent": "^1.8.2",
     "superagent-promise": "^1.1.0",
