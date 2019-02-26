@@ -30,21 +30,21 @@
     "build": "cheminfo build --no-uglify"
   },
   "devDependencies": {
-    "cheminfo-tools": "^1.0.4",
-    "istanbul": "^0.3.19",
-    "mocha": "^2.2.5",
-    "mocha-better-spec-reporter": "^2.1.1",
-    "should": "^7.0.2"
+    "cheminfo-tools": "^1.22.4",
+    "istanbul": "^0.4.5",
+    "mocha": "^6.0.2",
+    "mocha-better-spec-reporter": "^3.1.0",
+    "should": "^13.2.3"
   },
   "dependencies": {
     "chemcalc": "^3.4.1",
     "ml-stat": "^1.0.1",
-    "papaparse": "^4.1.2",
-    "peaks-similarity": "^2.3.0",
-    "peptide": "^1.5.2",
+    "papaparse": "^4.6.3",
+    "peaks-similarity": "^2.3.1",
+    "peptide": "^1.6.2",
     "regexp-enumerator": "^1.0.0",
-    "superagent": "^1.8.2",
+    "superagent": "^4.1.0",
     "superagent-promise": "^1.1.0",
-    "web-worker-manager": "^0.1.0"
+    "web-worker-manager": "^0.2.0"
   }
 }
