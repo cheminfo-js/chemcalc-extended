@@ -1,6 +1,6 @@
 /**
  * chemcalc-extended - chemcalc-extended project - extends chemcalc with new methods
- * @version v2.3.0
+ * @version v2.4.0
  * @link https://github.com/cheminfo-js/chemcalc-extended
  * @license MIT
  */
@@ -12547,7 +12547,7 @@ function pushEncodedKeyValuePair(pairs, key, val) {
       });
     } else if (isObject(val)) {
       for (const subkey in val) {
-        pushEncodedKeyValuePair(pairs, `${key}[${subkey}]`, val[subkey]);
+        pushEncodedKeyValuePair(pairs, "".concat(key, "[").concat(subkey, "]"), val[subkey]);
       }
     } else {
       pairs.push(encodeURIComponent(key) + '=' + encodeURIComponent(val));
@@ -12796,7 +12796,7 @@ Response.prototype.toError = function () {
   const req = this.req;
   const method = req.method;
   const url = req.url;
-  const msg = `cannot ${method} ${url} (${this.status})`;
+  const msg = "cannot ".concat(method, " ").concat(url, " (").concat(this.status, ")");
   const err = new Error(msg);
   err.status = this.status;
   err.method = method;
@@ -14940,7 +14940,7 @@ module.exports = function Comparator() {
               return (widthBottom - diff) * intersection.y / 2 * factor;
 
             default:
-              throw new Error(`unexpected intersection value: ${i}`);
+              throw new Error("unexpected intersection value: ".concat(i));
           }
         }
       }
@@ -16601,7 +16601,7 @@ RequestBase.prototype.abort = function () {
 RequestBase.prototype._auth = function (user, pass, options, base64Encoder) {
   switch (options.type) {
     case 'basic':
-      this.set('Authorization', `Basic ${base64Encoder(`${user}:${pass}`)}`);
+      this.set('Authorization', "Basic ".concat(base64Encoder("".concat(user, ":").concat(pass))));
       break;
 
     case 'auto':
@@ -16611,7 +16611,7 @@ RequestBase.prototype._auth = function (user, pass, options, base64Encoder) {
 
     case 'bearer':
       // usage would be .auth(accessToken, { type: 'bearer' })
-      this.set('Authorization', `Bearer ${user}`);
+      this.set('Authorization', "Bearer ".concat(user));
       break;
   }
 
@@ -16753,7 +16753,7 @@ RequestBase.prototype.send = function (data) {
     type = this._header['content-type'];
 
     if ('application/x-www-form-urlencoded' == type) {
-      this._data = this._data ? `${this._data}&${data}` : data;
+      this._data = this._data ? "".concat(this._data, "&").concat(data) : data;
     } else {
       this._data = (this._data || '') + data;
     }
@@ -16852,7 +16852,7 @@ RequestBase.prototype._timeoutError = function (reason, timeout, errno) {
     return;
   }
 
-  const err = new Error(`${reason + timeout}ms exceeded`);
+  const err = new Error("".concat(reason + timeout, "ms exceeded"));
   err.timeout = timeout;
   err.code = 'ECONNABORTED';
   err.errno = errno;

@@ -1,6 +1,6 @@
 {
   "name": "chemcalc-extended",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "chemcalc-extended project - extends chemcalc with new methods",
   "keywords": [
     "chemcalc-extended",
@@ -30,7 +30,7 @@
     "build": "cheminfo build --no-uglify"
   },
   "devDependencies": {
-    "cheminfo-tools": "^1.22.4",
+    "cheminfo-tools": "^1.22.5",
     "istanbul": "^0.4.5",
     "mocha": "^6.0.2",
     "mocha-better-spec-reporter": "^3.1.0",
